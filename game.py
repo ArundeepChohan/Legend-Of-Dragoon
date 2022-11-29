@@ -97,6 +97,12 @@ class Npc(pygame.sprite.Sprite):
         self.rect.topleft = position
         self.font = pygame.font.Font(None,32)
 
+        """
+        There are 8 status ailments
+        Poison, Stun, Arm-blocking,Confusion,Bewitchment, Fear, Despirit,Petrification, Can't Combat
+        """
+        self.status = [-1]*8
+
     def update(self):
         if self.state == 0:
             self.frame += 1
@@ -113,7 +119,7 @@ class Npc(pygame.sprite.Sprite):
         if damage < 0:
             self.current_hp=self.current_hp-damage if self.current_hp-damage<self.hp else self.hp
         else:
-            if (self.current_hp-damage)>0:
+            if (self.current_hp-damage) > 0:
                 self.current_hp-=damage 
             else:
                 self.current_hp = 0
@@ -468,6 +474,11 @@ class Character():
 
         self.base_attack = attack
 
+        """
+        There are 8 status ailments
+        Poison, Stun, Arm-blocking, Confusion, Bewitchment, Fear, Despirit, Petrification, Can't Combat
+        """
+        self.status = [-1]*7
         self.is_defending = False
         self.in_dragoon = False
 
@@ -636,18 +647,18 @@ class Menu():
 class Inventory():
     def __init__(self):
         
-        #Name, Attack Damage, Buy, Sell, Effect, Who uses it (d_index)
+        #Name, Attack Damage, Buy, Sell, Effect, Who uses it 
         #46 unique ones related to certain chars
-        self.all_weapons = [[['Broad Sword',2,None,10,None,0],
-                             ['Bastard Sword',7,60,30,None,0],
+        self.all_weapons = [[['Broad Sword',2,None,10,None,[0]],
+                             ['Bastard Sword',7,60,30,None,[0]],
                              [],[],[],[],[],[]],
-                            [['Spear',4,None,10,None,1],
+                            [['Spear',4,None,10,None,[1,7]],
                              [],[],[],[],[],[]],
-                            [['Short Bow',3,None,10,None,2],
+                            [['Short Bow',3,None,10,None,[2,8]],
                              [],[],[],[],[],[]]
                             ]
-
-        self.all_items=['Health Potion']
+        #Name, Type, Field, Is flat, amount, Targets(Multi), Alive(is targets alive), Targeting Players
+        self.all_items = [['Health Potion','Recover','Hp',False,50,False,True, True]]
         self.items = OrderedDict()
         """
         Scroll Testing for items in menu
@@ -655,7 +666,13 @@ class Inventory():
             self.items[str(i)]=1
         """
         
-        self.weapons={}
+        self.weapons = {}
+        """
+        Basically add the primary weapons on new game.
+        """
+        for primary in self.all_weapons:
+            self.update_weapon(primary[0],1)
+
         #Name, sp, hits, level to obtain, time between attacks, damage modifiers
         self.all_additions = [[['Double Slash',[35]*5,2,0,[5,3],[150,157,165,187,202]],['Volcano',[20+(i*4) for i in range(5)],3,2,[5,4,3],[200,210,220,230,250]]],
                               [['Harpoon',[35,38,42,45,50],2,0,[5,3],[100,110,120,130,150]],['Spinning Cane',[35]*5,3,5,[5,4,3],[125+(25*i)for i in range(5)]]],
@@ -675,10 +692,15 @@ class Inventory():
         self.d_levels = [100,2000,6000,20000]
         self.gold = 0
         self.stardust = 0
-        #Start time - current time = total_time
-        #Save point: add to total, then change start time
+        """
+        New game start time
+        """
         self.total_time = 0
         self.start_time = datetime.now()
+        """
+        Start time - current time = total_time
+        Save point: add to total, then change start time
+        """
         self.avatars = []
         self.avatar_size = 150
 
@@ -700,16 +722,19 @@ class Inventory():
         self.attack_sprite_locations=[[8,15,0,15,25],[7.5,15,25,15,15],[7.5,15,42.5,15,20],
                                       [7.5,15,62.5,15,20],[8,15,80.5,15,20],[7.5,15,100,15,18]
                                       ,[8,15,117.5,15,20],[7.5,15,140,15,2]]
+
         for location in self.attack_sprite_locations:
             #print(location)
             for i in range(3):
                 img = self.all_spritesheets.image_at((location[0]+(i*location[1]),location[2],location[3],location[4]), colorkey=black)
                 self.attack_sprites.append(img)
         
-    def add_item(self,id,quantity):
-        self.items[self.all_items[id]] = self.items.get(self.all_items[id],0) + quantity
+    def update_item(self,id,quantity):
+        self.items[self.all_items[id][0]] = self.items.get(self.all_items[id][0],0) + quantity
+        if self.items[self.all_items[id][0]]<=0:
+            self.items.pop(self.all_items[id][0])
 
-    def add_weapon(self,id,quantity):
+    def update_weapon(self,id,quantity):
         self.weapons[id[0]] = self.weapons.get(id[0],0) + quantity
             
 class Game():
@@ -724,7 +749,6 @@ class Game():
         clock = pygame.time.Clock()
         running = True
 
-        #Convert this into each array element has it's own position
         dialog_positions = self.cutscenes.dialog_pos[self.cutscenes.level]
         dialogs          = self.cutscenes.dialog[self.cutscenes.level]
         #Restrict size to a certain size
@@ -796,7 +820,10 @@ class Game():
             self.inventory = self.menu.draw(screen,self.inventory,self.stages)
             pygame.display.flip()
             clock.tick(FPS)
-
+    """
+    Checks for boundary detection,a triggered npc fight, level/boundary hoppers, chest items
+    and clamps movement to the screen.
+    """
     def check_all_collisions(self,screen):
         boundary = self.stages.boundaries[self.stages.level][self.stages.boundary_index]
         self.stages.player.rect.clamp_ip(pygame.display.get_surface().get_rect())
@@ -808,6 +835,9 @@ class Game():
         self.fight_collision(screen)
         self.chest_collision()
 
+    """
+    Checks if the player is within the range of an npc and uses enter to proceed with dialog
+    """
     def check_triggered_dialog(self,screen,display_npc_dialogs,npc_index, previous_entry,space_released ):
         npc_index = self.npc_dialog()
         keys = pygame.key.get_pressed()
@@ -837,6 +867,9 @@ class Game():
             display_npc_dialogs.draw(screen)
         return display_npc_dialogs,npc_index, previous_entry,space_released 
 
+    """
+    Simply updates the player and stage level based off collisions.
+    """
     def display_stage(self,screen):
         clock   = pygame.time.Clock()
         running = True
@@ -954,7 +987,7 @@ class Game():
     def draw_sp_bars(self,screen,offset,player_index,team_box_size,team_font_size,sp_box_size,avatar_width,avatar_height):
         #Highlighting current players turn and drawing sp bars for all
         for i in range(len(self.inventory.team)):
-            if self.inventory.team[player_index]== self.inventory.team[i]:
+            if player_index == i:
                 avatar_pos = (offset+((screen_width-(2*offset))//3)*i+5,500+team_box_size)
                 rect = pygame.Rect(avatar_pos[0],avatar_pos[1],avatar_width,avatar_height)
                 pygame.draw.rect(screen,white,rect,width=5)
@@ -1030,9 +1063,15 @@ class Game():
             pygame.display.flip()
         return enemy_npcs
 
-    def display_attacking(self,screen,player_index,enemy_index,enemy_npcs):
+    def display_attacking(self,screen,player_index,target_indexes,enemy_npcs):
+        """
+        Only display the first attack target even if multi
+        """
+        enemy_index = target_indexes[0]
+
         x=enemy_npcs.sprites()[enemy_index].rect.x
         y=enemy_npcs.sprites()[enemy_index].rect.y
+        
         #Get image size (Todo)
         rect = pygame.Rect(x,y,50,50)
         new = screen.subsurface(rect)
@@ -1123,7 +1162,12 @@ class Game():
         """
         damage = (self.inventory.unlocked_team[self.inventory.team[player_index]].base_attack+self.inventory.all_weapons[self.inventory.unlocked_team[self.inventory.team[player_index]].weapon_row][self.inventory.unlocked_team[self.inventory.team[player_index]].weapon_col][1])*((hits/total_hits)/100)*( self.inventory.all_additions[row][col][5][(self.inventory.addition_counts[row][col]//20)])
         #print(damage)
-        enemy_npcs.sprites()[enemy_index].take_damage(damage)
+
+        """
+        Target all targets you can have
+        """
+        for target in target_indexes:
+            enemy_npcs.sprites()[target].take_damage(damage)
        
         #print(enemy_npcs.sprites()[enemy_index].hp)
         return enemy_npcs
@@ -1137,16 +1181,63 @@ class Game():
                 break
         return player_index
 
+    def pick_targets(self,screen,enemy_npcs,is_multi,targeting_players):
+        if targeting_players:
+            valid_targets = [player_index for player_index in self.inventory.team if self.inventory.unlocked_team[player_index].current_hp > 0] 
+        else:
+            valid_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].current_hp > 0] 
+
+        if is_multi:
+            return valid_targets
+
+        clock = pygame.time.Clock()
+        running = True
+        target_index = 0
+        while running:
+            screen.fill(white)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()          
+                keys = pygame.key.get_pressed()
+                if event.type in [KEYDOWN, KEYUP]:
+                    if keys[pygame.K_RETURN]:
+                        running = False
+                    if keys[pygame.K_LEFT]:
+                        if target_index > 0:
+                            target_index -=1
+                    if keys[pygame.K_RIGHT]:
+                        if target_index < len(valid_targets)-1:
+                            target_index +=1
+                    if keys[pygame.K_BACKSPACE]:
+                        running = False
+                        target_index = -1
+
+            if targeting_players:
+                x = 300+(target_index*100)
+                y = 300
+                pygame.draw.circle(screen,red,(x,y),15,1)
+            else:
+                x = enemy_npcs.sprites()[valid_targets[target_index]].rect.x
+                y = enemy_npcs.sprites()[valid_targets[target_index]].rect.y
+                pygame.draw.circle(screen,red,(x,y),15,1)
+
+            for i in range(len(enemy_npcs)):
+                enemy_npcs.sprites()[i].update()
+                enemy_npcs.sprites()[i].draw(screen)
+               
+            pygame.display.flip()
+            clock.tick(FPS)
+        return [valid_targets[target_index]]
+
     def display_battle(self,screen,enemy_npcs,can_run): 
         clock = pygame.time.Clock()
         running = True
 
         """
-        Set the initial to be first alive player and first alive enemy
-        also menu index
+        Set the initial to be first alive player also menu index
         """
         index = 0
-        enemy_index = 0
 
         player_index = None
         for player in self.inventory.team:
@@ -1166,8 +1257,8 @@ class Game():
 
         attack_selection = False
         item_selection = False
-        attack_index = 0
         item_index = 0
+        target_indexes = 0
 
         """     
         #Make these into animated sprites that when selected go through frames
@@ -1220,23 +1311,21 @@ class Game():
                         exit()          
                     keys = pygame.key.get_pressed()
                     if keys[pygame.K_RETURN]:
-                        print(all_valid_menu[index])
+                        #print(all_valid_menu[index])
                         if options[all_valid_menu[index]] == "Attack":
-                            if attack_selection and not item_selection:
-                                enemy_index = valid_enemy_targets[attack_index]
-                                enemy_npcs = self.display_attacking(screen,player_index,enemy_index,enemy_npcs)
-                                attack_selection = False
+                            is_multi = False
+                            targeting_players = False
+                            target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players )
+                            print(target_indexes)
+                            if target_indexes != -1:
+                                enemy_npcs = self.display_attacking(screen,player_index,target_indexes,enemy_npcs)
                                 valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].current_hp>0]
                                 if len(valid_enemy_targets) == 0:
                                     print('Killed Targets')
                                     return
                                 else:
-                                    attack_index = 0 
                                     player_index = self.increment_player(player_index)
                                     index = 0
-                            else:    
-                                attack_selection = True
-
                         if options[all_valid_menu[index]] == "Defend":
                             #Increase hp by 10% and then cap it off to max hp
                             #current_hp = current_hp+hp_healed if (current_hp+hp_healed)<total_hp else total_hp
@@ -1249,49 +1338,70 @@ class Game():
 
                         if options[all_valid_menu[index]] == "Items":
                             if item_selection:
-                                index = 0
-                                item_selection = False
-                                
-                            item_selection = True
-                            print('Open Items')
-                            #player_index = self.increment_player(player_index)
+                                items = list(self.inventory.items.items())
+                                if len(items)!=0:
+                                    #Name, Type, Field, Is flat, Amount, Targets(Multi), Alive(is targets alive), targeting_players
+                                    print(items[item_index][0])
+                                    item_id = -1
+                                    for i in range(len(self.inventory.all_items)):
+                                        if self.inventory.all_items[i][0] == items[item_index][0]:
+                                            item_id = i
+                                            break
+
+                                    is_multi = self.inventory.all_items[item_id][5]
+                                    targeting_players = self.inventory.all_items[item_id][7]
+                                    target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players)
+                                    if target_indexes  != -1:
+                                        for target in target_indexes:
+                                            if self.inventory.all_items[item_id][1]=='Recover':
+                                                #3 types of recovery hp,mp,sp then amount healed
+                                                if self.inventory.all_items[item_id][3]:
+                                                    heal_amount = self.inventory.all_items[item_id][4]
+                                                else:
+                                                    heal_amount = (self.inventory.unlocked_team[target].hp/100)*self.inventory.all_items[item_id][4]
+                                                print(heal_amount)
+                                                self.inventory.unlocked_team[target].take_damage(-heal_amount)
+
+                                        #Remove 1 quantity from item
+                                        self.inventory.update_item(item_id,-1)
+                                        item_selection = False
+                                        player_index = self.increment_player(player_index)
+                                        index = 0
+                                    
+                            else:
+                                item_selection = True
+                                print('Open Items')
 
                         if options[all_valid_menu[index]] == "Dragoon":
                             self.inventory.unlocked_team[self.inventory.team[player_index]].in_dragoon = True
                             player_index = self.increment_player(player_index)
                             index = 0
-                            
+
                         if options[all_valid_menu[index]] == "D_Attack":
-                            if attack_selection and not item_selection:
-                                enemy_index = valid_enemy_targets[attack_index]
-                                enemy_npcs = self.display_d_attacking(screen,player_index,enemy_index,enemy_npcs)
-                                attack_selection = False
-                                valid_enemy_targets=[i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].current_hp>0]
+                            is_multi = False
+                            targeting_players = False
+                            target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players )
+                            print(target_indexes)
+                            if target_indexes != -1:
+                                enemy_npcs = self.display_d_attacking(screen,player_index,target_indexes,enemy_npcs)
+                                valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].current_hp>0]
                                 if len(valid_enemy_targets) == 0:
                                     print('Killed Targets')
                                     return
                                 else:
-                                    attack_index = 0 
                                     player_index = self.increment_player(player_index)
                                     index = 0
-                            else:    
-                                attack_selection = True
+                            
 
                     if keys[pygame.K_LEFT]:
-                        if attack_selection and not item_selection:
-                            if attack_index > 0:
-                                attack_index-=1
-                        elif item_selection:
+                        if item_selection:
                             pass
                         else:
                             if index > 0:
                                 index-=1
 
                     if keys[pygame.K_RIGHT]:
-                        if attack_selection and not item_selection:
-                            if attack_index < len(valid_enemy_targets)-1:
-                                attack_index+=1
-                        elif item_selection:
+                        if item_selection:
                             pass
                         else:
                             if index < len(all_valid_menu)-1:
@@ -1303,50 +1413,40 @@ class Game():
                                 item_index+=1
                     if keys[pygame.K_UP]:
                         if item_selection:
-                            if item_index  > 0:
+                            if item_index > 0:
                                 item_index-=1
 
                     if keys[pygame.K_BACKSPACE]:
-                        attack_selection = False
-                        attack_index = 0
                         item_selection = False
                         item_index = 0
+                        target_indexes = 0
 
                 screen.fill(white)
                 #Battle selection options text, sprites, etc
                 if player_index < len(self.inventory.team):
                     image = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
-                    image.set_colorkey(black)
+                    #image.set_colorkey(black)
                     team_box_background = pygame.Surface(team_box.size, pygame.SRCALPHA)   
-                    team_box_background.set_colorkey(black)
+                    #team_box_background.set_colorkey(black)
                     team_box_background.fill(dialog_background)                         
                     screen.blit(team_box_background, (team_box.x,team_box.y))
                     menu_select = pygame.Surface((sprite_size,sprite_size), pygame.SRCALPHA)   
-                    menu_select.set_colorkey(black)
+                    #menu_select.set_colorkey(black)
                     menu_select.fill(red)                         
                     screen.blit(menu_select, ((screen_width/2)+(sprite_size*index)-((sprite_size*len(all_valid_menu))/2),460))
                     self.draw_battle_menu(screen,image,player_index,index,offset,options,all_valid_menu,is_visible,
                     team_box_size,team_font,team_font_size,avatar_width,avatar_height,sp_box_size,sprite_size)
                     pygame.draw.rect(screen,yellow,team_box,width=team_box_size)
                     self.draw_sp_bars(screen,offset,player_index,team_box_size,team_font_size,sp_box_size,avatar_width,avatar_height)
-                
-                    if attack_selection:
-                        #print(valid_enemy_targets,attack_selection,attack_index)
-                        if len(valid_enemy_targets) != 0:
-                            #Grab x,y from enemy_npcs (Todo)
-                            x = enemy_npcs.sprites()[valid_enemy_targets[attack_index]].rect.x
-                            y = enemy_npcs.sprites()[valid_enemy_targets[attack_index]].rect.y
-                            pygame.draw.circle(screen,red,(x,y),15,1)
 
                     if item_selection:
                         #Rework use screen_width and screen_height (Todo)
                         items = list(self.inventory.items.items())[item_index:item_index+5]
                         item_box_background = pygame.Surface((500,270), pygame.SRCALPHA)   
-                        item_box_background.set_colorkey(black)
+                        #item_box_background.set_colorkey(black)
                         item_box_background.fill(dialog_background)                         
-                        print('Display Item List')
-                        
-                        print(items)
+                        #print('Display Item List')
+                        #print(items)
                         for i in range(len(items)):
                             pos = (500//2,0+(i*30)+15)
                             print(pos)
@@ -1356,21 +1456,17 @@ class Game():
                             else:
                                 color = white
                             item = pygame.font.Font(None,16).render(str(items[i]), True, color)
-                            #rect = item.get_rect(center=(pos))
                             rect = item.get_rect(center=pos)
                             item_box_background.blit(item,rect)
                         item_background_rect = item_box_background.get_rect(center=((screen_width/2), (screen_height/2))) 
                         screen.blit(item_box_background, item_background_rect)
-                        
 
-                        #pygame.draw.rect(screen, dialog_background, pygame.Rect(100, 100, 300, 300))
-                        #print(self.inventory.items)
                     """
                     Overrides the draw function which is needed to print out the enemy dying and also update the frames
                     """
                     for i in range(len(enemy_npcs)):
                         #screen.fill(white)
-                        if i == enemy_index:
+                        if i == target_indexes:
                             enemy_npcs.sprites()[i].update()
                             enemy_npcs.sprites()[i].draw(screen)
                             frames = len(enemy_npcs.sprites()[i].images[enemy_npcs.sprites()[i].state])-1
@@ -1439,7 +1535,7 @@ class Game():
             if rect.colliderect(self.stages.player.rect):
                 
                 if self.stages.chest_list.sprites()[i].type_unlocked==0:
-                    self.inventory.add_item(self.stages.chest_list.sprites()[i].item_id,self.stages.chest_list.sprites()[i].quantity)
+                    self.inventory.update_item(self.stages.chest_list.sprites()[i].item_id,self.stages.chest_list.sprites()[i].quantity)
                     print('I hit a item chest')
                         
                 elif self.stages.chest_list.sprites()[i].type_unlocked==1:
@@ -1524,11 +1620,10 @@ class Game():
         if index !=0:
             char = Character((base_stats[index][0],self.inventory.unlocked_team[0].level,base_stats[index][2],
             base_stats[index][3],base_stats[index][4],base_stats[index][5],base_stats[index][6],base_stats[index][7]))
-            self.inventory.add_weapon(self.inventory.all_weapons[index][0],1)
+            
         else:
             char = Character(base_stats[index])
-            self.inventory.add_weapon(self.inventory.all_weapons[index][0],1)
-
+            
         self.inventory.unlocked_team[index] = char
         self.inventory.team_usability[index] = 0
 
