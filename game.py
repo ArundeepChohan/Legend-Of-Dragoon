@@ -43,6 +43,14 @@ base_stats = [{'Name':'Dart','Level':1,'D_index':0,'Addition_index':0,'Type':'Fi
               {'Name':'Shana','Level':1,'D_index':2,'Addition_index':2,'Type':None,
                 'Base_Hp':12,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0}]
 
+def fill_box_with_outline(image,pos,color,color2,width,height):
+        background_box = pygame.Surface((width,height), pygame.SRCALPHA)
+        if color2 != None:
+            background_box.fill(color2)
+        background_box.fill(color, background_box.get_rect().inflate(-2, -2))
+        image.blit(background_box,pos)
+        return image
+
 class Spritesheet(object):
     def __init__(self, filename):
         try:
@@ -473,9 +481,9 @@ class Character():
         There are 8 status ailments
         Poison, Stun, Arm-blocking, Confusion, Bewitchment, Fear, Despirit, Petrification, Can't Combat
         """
-        self.status = [-1]*7
+        self.status = [-1] * 7
 
-        self.slots = [None]*5
+        self.slots = [None] * 5
         self.is_defending = False
         self.in_dragoon = False
 
@@ -527,15 +535,10 @@ class Menu():
         self.index = 0
         self.options = ['Status','Item','Armed','Addition','Replace','Config','Save']
 
-    def fill_box_with_outline(self,pos,width,height):
-        background_box = pygame.Surface((width,height), pygame.SRCALPHA)
-        background_box.fill(black)
-        background_box.fill(menu_background, background_box.get_rect().inflate(-2, -2))
-        self.image.blit(background_box,pos)
 
     def draw_character_box(self,inventory,pos,offset,width,i):
         height = (screen_height-(2*offset)-(2*offset))//3
-        self.fill_box_with_outline(pos,width,height)
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
         
         if inventory.team[i] != None:
             avatar = pygame.transform.smoothscale(inventory.avatars[inventory.team[i]],((inventory.avatar_size,inventory.avatar_size)))
@@ -579,7 +582,7 @@ class Menu():
     def draw_title(self,stages,offset,width,total_height):
         pos = (offset,total_height)
         height = (screen_height-(2*offset)-(2*offset))//4
-        self.fill_box_with_outline(pos,width,height)
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
         stage_level = self.font.render(str(stages.level), True, white)
         self.image.blit(stage_level,((pos[0],pos[1])))
 
@@ -587,7 +590,7 @@ class Menu():
         pos = (offset,total_height)
         #print(pos)
         height = (screen_height-(2*offset)-(2*offset))//2
-        self.fill_box_with_outline(pos,width,height)
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
 
         for j in range(len(self.options)):
             if j == self.selected and self.index != 2:
@@ -601,7 +604,7 @@ class Menu():
     def draw_time(self,inventory,offset,width,total_height):
         pos = (offset,total_height)
         height = (screen_height-(2*offset)-(2*offset)-(2*offset)-(offset/2))//4 
-        self.fill_box_with_outline(pos,width,height)
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
 
         gold = self.font.render('GOLD '+str(inventory.gold), True, white)
         self.image.blit(gold,((pos[0],pos[1])))
@@ -687,7 +690,7 @@ class Menu():
 
         height = (screen_height-(2*offset)-(2*offset))//3
         pos = (((screen_width/2)+(offset/2)),(offset))
-        self.fill_box_with_outline(pos,width,height)
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
         slots = inventory.unlocked_team[self.all_unlocked_team[self.selected]].slots
         for i in range(len(slots)):
             pos = (((screen_width/2)+(offset/2)),(offset+(i*offset)))
@@ -702,7 +705,7 @@ class Menu():
         pos = (offset,offset+height+offset)
         s_height = screen_height-(3*offset)-height
         #print(s_height)
-        self.fill_box_with_outline(pos,width,s_height)
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,s_height)
 
         equipment_stats = inventory.unlocked_team[self.all_unlocked_team[self.selected]].equipment_total_stats()
         table_row_names = ['Body','Equipment','Total','Dragoon']
@@ -729,7 +732,7 @@ class Menu():
             self.image.blit(total_field,rect)
 
         pos = (((screen_width/2)+(offset/2)),height+(2*offset))
-        self.fill_box_with_outline(pos,width,s_height)
+        self.image= fill_box_with_outline(self.image,pos,menu_background,black,width,s_height)
         #Display all weapons that can be used by this character 
         self.valid_equipment = [i for i in range(len(inventory.equipment)) if inventory.equipment[i].stats['Equip'] is None and self.all_unlocked_team[self.selected] in inventory.equipment[i].stats['Usage']]
         
@@ -859,9 +862,9 @@ class Inventory():
 
     def update_equipment(self,new_eq,quantity):
         for i in range(quantity):
-            print((new_eq.stats['Equip']==None))
+            #print((new_eq.stats['Equip']==None))
             self.equipment.append(new_eq)
-        print(self.equipment)
+        #print(self.equipment)
             
 class Game():
     def __init__(self):
@@ -1127,11 +1130,10 @@ class Game():
         """
         Calculate the size of the blue menu background using sprite_size(30) * the number of menu items
         """
-        menu_background = pygame.Surface((sprite_size*len(all_valid_menu),sprite_size), pygame.SRCALPHA)  
-        menu_background.set_colorkey(black)
-        menu_background.fill((173,216,255,127))                        
-        screen.blit(menu_background, ((screen_width/2)-((sprite_size*len(all_valid_menu))/2),460))
-
+        width=sprite_size*len(all_valid_menu)
+        pos=((screen_width/2)-((sprite_size*len(all_valid_menu))/2),460)
+        image = fill_box_with_outline(image,pos,(173,216,255,127),None,width,sprite_size)
+        
         start = 0
         for i in range(len(all_valid_menu)):
             if all_valid_menu[i] == 5:
@@ -1292,7 +1294,7 @@ class Game():
         attacking = True
         start_ticks = pygame.time.get_ticks()
         enemy_npcs.sprites()[enemy_index].rect.topleft=(screen_width/2,screen_height/2)
-        
+
         while attacking:
             seconds = (pygame.time.get_ticks()-start_ticks)/1000
             if seconds > time_between_attacks[hits]:
@@ -1625,6 +1627,9 @@ class Game():
                     if player_index < len(self.inventory.team) and self.inventory.team[player_index] != None:
                         image = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
                         #image.set_colorkey(black)
+                        image = fill_box_with_outline(image,(team_box.x,team_box.y),dialog_background,None,team_box.width,team_box.height)
+                        image = fill_box_with_outline(image,(((screen_width/2)+(sprite_size*index)-((sprite_size*len(all_valid_menu))/2)),460),red,None,sprite_size,sprite_size)
+                        """
                         team_box_background = pygame.Surface(team_box.size, pygame.SRCALPHA)   
                         #team_box_background.set_colorkey(black)
                         team_box_background.fill(dialog_background)                         
@@ -1633,6 +1638,9 @@ class Game():
                         #menu_select.set_colorkey(black)
                         menu_select.fill(red)                         
                         screen.blit(menu_select, ((screen_width/2)+(sprite_size*index)-((sprite_size*len(all_valid_menu))/2),460))
+                        
+                        """
+                        
                         self.draw_battle_menu(screen,image,player_index,index,self.offset,options,all_valid_menu,is_visible,
                         team_box_size,team_font,team_font_size,avatar_width,avatar_height,sp_box_size,sprite_size)
                         pygame.draw.rect(screen,yellow,team_box,width=team_box_size)
