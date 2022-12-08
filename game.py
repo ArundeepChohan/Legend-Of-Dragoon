@@ -43,11 +43,11 @@ base_stats = [{'Name':'Dart','Level':1,'D_index':0,'Addition_index':0,'Type':'Fi
               {'Name':'Shana','Level':1,'D_index':2,'Addition_index':2,'Type':None,
                 'Base_Hp':12,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0}]
 
-def fill_box_with_outline(image,pos,color,color2,width,height):
+def fill_box_with_outline(image,pos,color,color2,width,height,border_size=1):
         background_box = pygame.Surface((width,height), pygame.SRCALPHA)
         if color2 != None:
             background_box.fill(color2)
-        background_box.fill(color, background_box.get_rect().inflate(-2, -2))
+        background_box.fill(color, background_box.get_rect().inflate(-(border_size+1), -(border_size+1)))
         image.blit(background_box,pos)
         return image
 
@@ -1126,7 +1126,27 @@ class Game():
 
     def draw_battle_menu(self,screen,image,player_index,index,offset,options,all_valid_menu,is_visible,team_box_size,team_font,team_font_size,
                   avatar_width,avatar_height,sp_box_size,sprite_size):
-
+        """     
+        #Make these into animated sprites that when selected go through frames
+        all_menu_sprites = pygame.sprite.Group()    
+        start = 0
+        for i in range(len(is_visible)):
+            if is_visible[i]!=-1:
+                start+=30
+                new_images = []
+                for x in self.inventory.attack_sprites[i*3:(i*3)+2]:
+                    img = pygame.transform.scale(x,(30,30))
+                    img.set_colorkey(black) 
+                    new_images.append(img)
+                new_menu = Npc((start,0),new_images)
+                all_menu_sprites.add(new_menu) 
+        """
+        """
+            #Should update menu based off index selected             
+            for menu in all_menu_sprites:
+                menu.update()
+            all_menu_sprites.draw(screen)
+        """ 
         """
         Calculate the size of the blue menu background using sprite_size(30) * the number of menu items
         """
@@ -1156,20 +1176,21 @@ class Game():
                 avatar.set_colorkey(black)
                 image.blit(avatar,pos)
                 #Name, Hp, Mp, Sp (5 levels of color)
+                #Also the 5 is just padding for the highlighted player white box
                 name = team_font.render(str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Name']), True, white)
-                image.blit(name,(pos[0]+avatar_width,pos[1])) 
+                image.blit(name,(pos[0]+avatar_width+5,pos[1])) 
                 hp = team_font.render('HP '+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Hp'])+'/'+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Hp']), True, white)
-                image.blit(hp,(pos[0]+avatar_width,pos[1]+team_font_size))
+                image.blit(hp,(pos[0]+avatar_width+5,pos[1]+team_font_size))
                 mp = team_font.render('MP '+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Mp'])+'/'+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Mp']), True, white)
-                image.blit(mp,(pos[0]+avatar_width,pos[1]+team_font_size*2))
+                image.blit(mp,(pos[0]+avatar_width+5,pos[1]+team_font_size*2))
                 #This needs to get the SP level in integers 0-5 
                 if self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']>0 and self.inventory.d_usability[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_index']]!=None:
                     sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']
                     if sp_filled != 0:
                         sp_text = team_font.render('SP', True, white)
-                        image.blit(sp_text,(pos[0]+avatar_width,pos[1]+team_font_size*3)) 
+                        image.blit(sp_text,(pos[0]+avatar_width+5,pos[1]+team_font_size*3)) 
                         sp_filled_amount = team_font.render(str(sp_filled), True, white)
-                        image.blit(sp_filled_amount,(pos[0]+avatar_width+sp_box_size+team_font_size ,pos[1]+team_font_size*3)) 
+                        image.blit(sp_filled_amount,(pos[0]+avatar_width+sp_box_size+team_font_size+5,pos[1]+team_font_size*3)) 
 
         screen.blit(image,image.get_rect())
 
@@ -1177,12 +1198,8 @@ class Game():
         #Highlighting current players turn and drawing sp bars for all
         for i in range(len(self.inventory.team)):
             if self.inventory.team[i] != None:
-                if player_index == i:
-                    avatar_pos = (offset+((screen_width-(2*offset))//3)*i+5,500+team_box_size)
-                    rect = pygame.Rect(avatar_pos[0],avatar_pos[1],avatar_width,avatar_height)
-                    pygame.draw.rect(screen,white,rect,width=5)
-                if self.inventory.unlocked_dragoons[self.inventory.team[i]] !=None:
-                    pos = (offset+((screen_width-(2*offset))//3)*i+5,500+team_box_size)
+                if self.inventory.unlocked_dragoons[self.inventory.team[i]] != None:
+                    pos = ((offset+((screen_width-(2*offset))//3)*i+(2*5)),500+team_box_size)
                     sp_bar = pygame.Rect(pos[0]+avatar_width+team_font_size,pos[1]+team_font_size*3,sp_box_size,10)
                     pygame.draw.rect(screen,gray,sp_bar,width=1)
                     sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']
@@ -1318,9 +1335,10 @@ class Game():
 
             if hits >= total_hits-1:
                 print('Successful addition')
-                print('Play last hit')
                 if total_hits == 1:
                     hits = 1
+                else:
+                    hits+=1
                 break
             
             screen.fill(white)
@@ -1340,7 +1358,6 @@ class Game():
             pygame.display.flip()
             clock.tick(FPS)
 
-        print(enemy_npcs.sprites()[enemy_index].stats['Hp'])
         """
             Rework add damage modifiers so weapon and additions modifier % (Todo)
             (base_attack + weapon_damage )* (hits/totals_hit)/100 * addition%
@@ -1350,11 +1367,16 @@ class Game():
                                             -> col -> self.inventory.selected_additions[self.inventory.team[player_index]]
 
         """
+        body_total = self.inventory.unlocked_team[self.inventory.team[player_index]].stats
+        equipment_total = self.inventory.unlocked_team[self.inventory.team[player_index]].equipment_total_stats()
+        for key,value in equipment_total.items():
+            if key in body_total:
+                equipment_total[key] += body_total[key]
+
+        damage = equipment_total['Attack']*(((hits/total_hits)/100)*(self.inventory.all_additions[row][col][5][self.inventory.addition_counts[row][col]//20]))
+        print('I did ',damage,equipment_total['Attack'],hits,((hits/total_hits)/100))
         
-        #Change to weapon equipped or 0 stat increase
-        damage = (self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Attack'])*((hits/total_hits)/100)*( self.inventory.all_additions[row][col][5][(self.inventory.addition_counts[row][col]//20)])
-        print('I did ',damage,self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Attack'])
-        
+        #print(enemy_npcs.sprites()[enemy_index].stats['Hp'])
         """
         Target all targets you can have
         """
@@ -1362,7 +1384,7 @@ class Game():
             enemy_npcs.sprites()[target].update_field(damage,'Hp')
        
         #print(enemy_npcs.sprites()[enemy_index].hp)
-        enemy_npcs.sprites()[enemy_index].rect.topleft=(x,y)
+        enemy_npcs.sprites()[enemy_index].rect.topleft = (x,y)
         return enemy_npcs
 
     def increment_player(self,player_index):
@@ -1450,27 +1472,11 @@ class Game():
         team_font_size = 16
         team_font = pygame.font.Font(None,team_font_size)
         team_box = pygame.Rect(self.offset,500,screen_width-(2*self.offset),screen_height-500-self.offset)
-        team_box_size = 5
+        team_box_border_size = 5
 
         item_selection = False
         item_index = 0
         target_indexes = [0]
-
-        """     
-        #Make these into animated sprites that when selected go through frames
-        all_menu_sprites = pygame.sprite.Group()    
-        start = 0
-        for i in range(len(is_visible)):
-            if is_visible[i]!=-1:
-                start+=30
-                new_images = []
-                for x in self.inventory.attack_sprites[i*3:(i*3)+2]:
-                    img = pygame.transform.scale(x,(30,30))
-                    img.set_colorkey(black) 
-                    new_images.append(img)
-                new_menu = Npc((start,0),new_images)
-                all_menu_sprites.add(new_menu) 
-        """
 
         while running:
             valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].stats['Current_Hp'] > 0] 
@@ -1576,13 +1582,13 @@ class Game():
 
                             if options[all_valid_menu[index]] == "Dragoon":
                                 self.inventory.unlocked_team[self.inventory.team[player_index]].in_dragoon = True
-                                player_index = self.increment_player(player_index)
+                                #player_index = self.increment_player(player_index)
                                 index = 0
 
                             if options[all_valid_menu[index]] == "D_Attack":
                                 is_multi = False
                                 targeting_players = False
-                                target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players )
+                                target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players)
                                 if target_indexes != -1:
                                     enemy_npcs = self.display_d_attacking(screen,player_index,target_indexes,enemy_npcs)
                                     valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].stats['Current_Hp']>0]
@@ -1627,24 +1633,17 @@ class Game():
                     if player_index < len(self.inventory.team) and self.inventory.team[player_index] != None:
                         image = pygame.Surface((screen_width,screen_height),pygame.SRCALPHA)
                         #image.set_colorkey(black)
-                        image = fill_box_with_outline(image,(team_box.x,team_box.y),dialog_background,None,team_box.width,team_box.height)
+                        image = fill_box_with_outline(image,(team_box.x,team_box.y),dialog_background,yellow,team_box.width,team_box.height,team_box_border_size)
                         image = fill_box_with_outline(image,(((screen_width/2)+(sprite_size*index)-((sprite_size*len(all_valid_menu))/2)),460),red,None,sprite_size,sprite_size)
-                        """
-                        team_box_background = pygame.Surface(team_box.size, pygame.SRCALPHA)   
-                        #team_box_background.set_colorkey(black)
-                        team_box_background.fill(dialog_background)                         
-                        screen.blit(team_box_background, (team_box.x,team_box.y))
-                        menu_select = pygame.Surface((sprite_size,sprite_size), pygame.SRCALPHA)   
-                        #menu_select.set_colorkey(black)
-                        menu_select.fill(red)                         
-                        screen.blit(menu_select, ((screen_width/2)+(sprite_size*index)-((sprite_size*len(all_valid_menu))/2),460))
-                        
-                        """
-                        
+                        avatar_pos = (self.offset+(((screen_width-(2*self.offset))//3)*player_index),500+team_box_border_size-(5))
+                        print(avatar_pos,avatar_width,avatar_height)
+                        image = fill_box_with_outline(image,avatar_pos,white,None,avatar_width+(2*5),avatar_height+(2*5),5)
+
                         self.draw_battle_menu(screen,image,player_index,index,self.offset,options,all_valid_menu,is_visible,
-                        team_box_size,team_font,team_font_size,avatar_width,avatar_height,sp_box_size,sprite_size)
-                        pygame.draw.rect(screen,yellow,team_box,width=team_box_size)
-                        self.draw_sp_bars(screen,self.offset,player_index,team_box_size,team_font_size,sp_box_size,avatar_width,avatar_height)
+                        team_box_border_size,team_font,team_font_size,avatar_width,avatar_height,sp_box_size,sprite_size)
+                        #pygame.draw.rect(screen,yellow,team_box,width=team_box_size)
+                        
+                        self.draw_sp_bars(screen,self.offset,player_index,team_box_border_size,team_font_size,sp_box_size,avatar_width,avatar_height)
 
                         if item_selection:
                             #Rework use screen_width and screen_height (Todo)
@@ -1671,29 +1670,18 @@ class Game():
                         Overrides the draw function which is needed to print out the enemy dying and also update the frames
                         """
                         for i in range(len(enemy_npcs)):
-                            #screen.fill(white)
-                            print(i,target_indexes)
                             if i in target_indexes:
-                                print('Update targ')
                                 enemy_npcs.sprites()[i].update()
                                 enemy_npcs.sprites()[i].draw(screen)
                                 frames = len(enemy_npcs.sprites()[i].images[enemy_npcs.sprites()[i].state])-1
-                                #print(frames)
                                 if enemy_npcs.sprites()[i].frame < frames and enemy_npcs.sprites()[i].state == 1:
                                     pygame.time.delay(200)     
                             else:
                                 enemy_npcs.sprites()[i].update()
                                 enemy_npcs.sprites()[i].draw(screen)
                 
-                    """
-                    #Should update menu based off index selected             
-                    for menu in all_menu_sprites:
-                        menu.update()
-                    all_menu_sprites.draw(screen)
-                    """ 
                     pygame.display.flip()
                     clock.tick(FPS)
-                
             else:
                 #print('NPC TURN')
                 for i in range(len(enemy_npcs)):
@@ -1718,11 +1706,13 @@ class Game():
                                 if self.inventory.unlocked_team[player].stats['Current_Hp']>0:
                                     players_dead = False
                                     break
+
                         #print(players_dead)
                         if players_dead:
                             print('All players have died')
                             pygame.quit()
                             exit()  
+                            
                 valid_player_targets = []
                 for player in self.inventory.team:
                     if player != None:
