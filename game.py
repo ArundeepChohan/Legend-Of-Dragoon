@@ -1,3 +1,4 @@
+import copy
 import pygame
 from pygame.locals import *
 import os
@@ -488,14 +489,12 @@ class Character():
         self.in_dragoon = False
 
     def equip(self,slot,equipment):
-        if self.slots[slot] != None:
-            pass
         self.slots[slot] = equipment
 
-    def equipment_total_stats(self,slot=None,equipment=None):  
-        copy = self.slots
-        if slot != None:
-            copy.slots[slot] = equipment
+    def equipment_total_stats(self,equipment=None):  
+        copy = self.slots.copy()
+        if equipment != None:
+            copy[equipment.stats['Slot']] = equipment
         total = OrderedDict({'Attack':0,'Defense':0,'Matk':0,'Mdef':0})
         for i in range(len(copy)):
             if copy[i] is not None:
@@ -681,8 +680,10 @@ class Menu():
         return inventory
 
     def draw_armed(self,screen,inventory,offset):
-        self.all_unlocked_team = [i for i in range(len(inventory.unlocked_team)) if inventory.unlocked_team[i] != None and inventory.team_usability[i] != None]
-                    
+        #self.all_unlocked_team = [i for i in range(len(inventory.unlocked_team)) if inventory.unlocked_team[i] != None and inventory.team_usability[i] != None]
+        #Display all weapons that can be used by this character 
+        #self.valid_equipment = [i for i in range(len(inventory.equipment)) if inventory.equipment[i].stats['Equip'] is None and self.all_unlocked_team[self.selected] in inventory.equipment[i].stats['Usage']]
+        #print(len(self.valid_equipment))
         #print(all_unlocked_team)
         pos = (offset,offset)
         width = (screen_width-(3*offset))//2
@@ -708,39 +709,57 @@ class Menu():
         self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,s_height)
 
         equipment_stats = inventory.unlocked_team[self.all_unlocked_team[self.selected]].equipment_total_stats()
+        if len(self.valid_equipment) != 0:
+            equipment_changed_stats = inventory.unlocked_team[self.all_unlocked_team[self.selected]].equipment_total_stats(inventory.equipment[self.valid_equipment[self.equipment_index]])
+        else:
+            equipment_changed_stats = equipment_stats.copy()
+
         table_row_names = ['Body','Equipment','Total','Dragoon']
 
         for i, row in enumerate(table_row_names):
             header = self.font.render(str(row), True, white)
             rect = header.get_rect(center=(pos[0]+(i*90)+offset,pos[1]+(offset)))
             self.image.blit(header,rect)
-
-        for i, (key, value) in enumerate(equipment_stats.items()):
+        
+        for i, (key, value) in enumerate(equipment_changed_stats.items()):
             #print(i,key,value)
             body_value = inventory.unlocked_team[self.all_unlocked_team[self.selected]].stats[key]
             body_field = self.font.render(str(body_value), True, white)
             rect = body_field.get_rect(center=(pos[0]+(0)+offset,pos[1]+(offset*(i+2))))
             self.image.blit(body_field,rect)
+            #print(equipment_stats[key],value)
+            if len(self.valid_equipment) != 0:
+                if equipment_stats[key] > value:
+                    color = red
+                elif equipment_stats[key] < value:
+                    color = blue
+                else:
+                    color = white
+            else:
+                color = white
 
-            equip_field = self.font.render(str(value), True, white)
+            equip_field = self.font.render(str(value), True, color)
             rect = equip_field.get_rect(center=(pos[0]+(90)+offset,pos[1]+(offset*(i+2))))
             self.image.blit(equip_field,rect)
 
             total_value = body_value + value
-            total_field = self.font.render(str(total_value), True, white)
+            total_field = self.font.render(str(total_value), True, color)
             rect = total_field.get_rect(center=(pos[0]+(180)+offset,pos[1]+(offset*(i+2))))
             self.image.blit(total_field,rect)
 
         pos = (((screen_width/2)+(offset/2)),height+(2*offset))
-        self.image= fill_box_with_outline(self.image,pos,menu_background,black,width,s_height)
-        #Display all weapons that can be used by this character 
-        self.valid_equipment = [i for i in range(len(inventory.equipment)) if inventory.equipment[i].stats['Equip'] is None and self.all_unlocked_team[self.selected] in inventory.equipment[i].stats['Usage']]
-        
+        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,s_height)
+     
         for i,val in enumerate(self.valid_equipment[self.equipment_index:self.equipment_index+4]):
+            if i == 0:
+                self.image = fill_box_with_outline(self.image,(pos[0],pos[1]+(offset*i)),yellow,black,width,30)
+                color = black
+            else:
+                color = white
             img = pygame.transform.smoothscale(inventory.equipment_sprites[inventory.equipment[val].stats['Slot']],((50,30)))
             img.set_colorkey(white)
             self.image.blit(img,(pos[0],pos[1]+(offset*i)))
-            name = self.font.render(str(inventory.equipment[val].stats['Equipment_Name']), True, white)
+            name = self.font.render(str(inventory.equipment[val].stats['Equipment_Name']), True, color)
             self.image.blit(name,(pos[0]+50,pos[1]+(offset*i)))
 
         screen.blit(self.image,self.rect)
@@ -863,7 +882,7 @@ class Inventory():
     def update_equipment(self,new_eq,quantity):
         for i in range(quantity):
             #print((new_eq.stats['Equip']==None))
-            self.equipment.append(new_eq)
+            self.equipment.append(copy.deepcopy(new_eq))
         #print(self.equipment)
             
 class Game():
@@ -933,18 +952,33 @@ class Game():
                             #print(all_unlocked_team,valid_equipment)
                             self.menu.all_unlocked_team = all_unlocked_team
                             self.menu.valid_equipment = valid_equipment
-                            
                         elif self.menu.options[self.menu.selected] == 'Replace':
                             self.menu.selected = 0
                             self.menu.index = 5
                             item_selected = False
-                        
                     elif self.menu.index == 2:
                         if item_selected:
                             print(self.menu.selected)
                             item_selected = False
                         else:
                             item_selected = True
+                    elif self.menu.index == 3:
+                        player=self.menu.all_unlocked_team[self.menu.selected]
+                        weapon_to_equip = self.inventory.equipment[self.menu.valid_equipment[self.menu.equipment_index]]
+                        #print(weapon_to_equip.stats['Equip'],weapon_to_equip.stats['Slot'])
+                        weapon_to_equip.stats['Equip'] = player
+                        for x in self.inventory.equipment:
+                            if x.stats['Equip'] == player and x.stats['Slot'] == weapon_to_equip.stats['Slot']:
+                                x.stats['Equip'] = None
+                                print(x.stats['Equip'],x.stats['Slot'])
+                                break
+                        player_to_equip = self.inventory.unlocked_team[player]
+                        player_to_equip.equip(weapon_to_equip.stats['Slot'],weapon_to_equip)
+                        all_unlocked_team = [i for i in range(len(self.inventory.unlocked_team)) if self.inventory.unlocked_team[i] != None and self.inventory.team_usability[i] != None]
+                        valid_equipment = [i for i in range(len(self.inventory.equipment)) if self.inventory.equipment[i].stats['Equip'] is None and all_unlocked_team[self.menu.selected] in self.inventory.equipment[i].stats['Usage']]
+                        #print(all_unlocked_team,valid_equipment)
+                        self.menu.all_unlocked_team = all_unlocked_team
+                        self.menu.valid_equipment = valid_equipment
                               
                 if keys[pygame.K_LEFT]:
                     if self.menu.index == 3:
@@ -955,7 +989,7 @@ class Game():
                     if self.menu.index == 3:
                         if self.menu.selected < len(self.menu.all_unlocked_team)-1:
                             self.menu.selected += 1
-                            self.menu.equipment_index=0
+                            self.menu.equipment_index = 0
 
                 if keys[pygame.K_UP]:
                     if self.menu.index == 0:
@@ -981,7 +1015,6 @@ class Game():
                     elif self.menu.index == 3:
                         if self.menu.equipment_index < len(self.menu.valid_equipment)-1:
                             self.menu.equipment_index+=1
-                        print(self.menu.equipment_index)
                     else:
                         if self.menu.index == 2:
                             if self.menu.selected < len(self.inventory.items)-1:
@@ -1712,7 +1745,7 @@ class Game():
                             print('All players have died')
                             pygame.quit()
                             exit()  
-                            
+
                 valid_player_targets = []
                 for player in self.inventory.team:
                     if player != None:
