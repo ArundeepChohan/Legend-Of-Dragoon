@@ -37,12 +37,47 @@ menu_background = (185,155,90)
 
 #name, level, hp, attack, weapon(row,col), addition index(Pass the same to Lavitz/Albert due to count)
 #base_stats = [('Dart',1,0,15,2,0,0,0),('Lavitz',None,1,17,3,1,0,1),('Shana',None,2,12,1,2,0,2)]
-base_stats = [{'Name':'Dart','Level':1,'D_index':0,'Addition_index':0,'Type':'Fire',
+base_stats = [{'Name':'Dart','Level':1,'D_Index':0,'Addition_index':0,'Type':'Fire',
                 'Base_Hp':15,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0},
-              {'Name':'Lavitz','Level':1,'D_index':1,'Addition_index':1,'Type':'Wind',
+              {'Name':'Lavitz','Level':1,'D_Index':1,'Addition_index':1,'Type':'Wind',
                 'Base_Hp':17,'Base_Attack':3,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0},
-              {'Name':'Shana','Level':1,'D_index':2,'Addition_index':2,'Type':None,
+              {'Name':'Shana','Level':1,'D_Index':2,'Addition_index':2,'Type':'Light',
                 'Base_Hp':12,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0}]
+
+"""
+Basically STR is attack, RECOVER is heal, Revive is set dead char to 1 hp,and DAMAGE RESIST is reduced damage for duration
+"""
+dragoon_stats = [
+                    {'Type':'Fire','D_Lvl':1,'Exp':0,'Base_Attack':[150,155,160,165,170],'Base_Defense':[200,210,220,230,250],
+                    'Base_Matk':[150,155,160,165,170],'Base_Mdef':[200,210,220,230,250],
+                    'Magic':[
+                        {'D_Lvl':1,'Effect':['STR'],'Spell_Name':'Flame Shot','Mp':10,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[50]},
+                        {'D_Lvl':2,'Effect':['STR'],'Spell_Name':'Explosion','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
+                        {'D_Lvl':3,'Effect':['STR'],'Spell_Name':'Final Burst','Mp':30,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[75]},
+                        {'D_Lvl':5,'Effect':['STR'],'Spell_Name':'Red-Eyed Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[175]},
+                    ]},
+                    {'Type':'Wind','D_Lvl':1,'Exp':0,'Base_Attack':[150,155,160,165,170],'Base_Defense':[200,210,220,230,250],
+                    'Base_Matk':[200,205,210,215,220],'Base_Mdef':[200,210,220,230,250],
+                    'Magic':[
+                        {'D_Lvl':1,'Effect':['STR'],'Spell_Name':'Wing Blaster','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
+                        {'D_Lvl':2,'Effect':['DAMAGE RESIST'],'Spell_Name':'Rose Storm','Mp':20,'Is_Multi':True,'Is_Enemy':[False],'Modifier':[50,3]},
+                        {'D_Lvl':3,'Effect':['STR'],'Spell_Name':'Gaspless','Mp':30,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[100]},
+                        {'D_Lvl':5,'Effect':['STR'],'Spell_Name':'Jade Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[75]},
+                    ]},
+
+                    {'Type':'Light','D_Lvl':1,'Exp':0,'Base_Attack':[200,205,210,215,220],'Base_Defense':[200,210,220,230,250],
+                    'Base_Matk':[150,155,160,165,170],'Base_Mdef':[200,210,220,230,250],
+                    'Magic':[
+                        {'D_Lvl':1,'Effect':['REVIVE','RECOVER'],'Spell_Name':'Moon Light','Mp':10,'Is_Multi':False,'Is_Enemy':[False],'Modifier':[1,100]},
+                        {'D_Lvl':2,'Effect':['STR'],'Spell_Name':'Star Children','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
+                        {'D_Lvl':3,'Effect':['RECOVER'],'Spell_Name':'Gates of Heaven','Mp':30,'Is_Multi':True,'Is_Enemy':[False],'Modifier':[100]},
+                        {'D_Lvl':5,'Effect':['STR','RECOVER'],'Spell_Name':'W Silver Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True,False],'Modifier':[100,100]},
+                    ]}
+
+]               
+class Dragoon():
+    def __init__(self,stats):
+        self.stats=stats
 
 def fill_box_with_outline(image,pos,color,color2,width,height,border_size=1):
         background_box = pygame.Surface((width,height), pygame.SRCALPHA)
@@ -132,7 +167,7 @@ class Npc(pygame.sprite.Sprite):
         self.image = self.images[self.state][self.frame]
 
     def update_field(self,damage,key):
-        print(key)
+        #print(key)
         self.stats['Current_'+key]-=damage 
         if self.stats['Current_'+key] > self.stats[key]:
             self.stats['Current_'+key] = self.stats[key]
@@ -361,8 +396,8 @@ class Stage():
         self.npc_dialogue = [[['Hi','Bye'],['Hi','Bye']],
                              [['Hi','Bye'],['Hi','Bye']],
                             ]           
-        self.npc_dialogue_sizes = [[[(25,50),(25,50)],[(25,50),(25,50)]],
-                                   [[(25,50),(25,50)],[(25,50),(25,50)]]
+        self.npc_dialogue_sizes = [[[(25,50),(50,50)],[(25,50),(50,50)]],
+                                   [[(25,50),(50,50)],[(25,50),(50,50)]]
                                   ]
           
         self.npc_list = pygame.sprite.Group()
@@ -387,7 +422,7 @@ class Stage():
         self.chest_list = pygame.sprite.Group()
         self.chest_locations = [[[400,500,0,1,0]],
                                 [[100,100,0,1,0]]
-                            ]
+                               ]
 
         for item in self.chest_locations[self.level]:
             new_item = Chest((item[0],item[1]),item[2],item[3],item[4])
@@ -461,11 +496,11 @@ class Character():
     #Calculate the other stats (ToDo) 
     def __init__(self,stats):
         self.stats = stats
-        self.stats['D_level'] = 0
+        #self.stats['D_Lvl'] = None
         self.stats['Current_Sp'] = 0
-        self.stats['Sp'] = self.stats['D_level']*100
-        self.stats['Mp'] = self.stats['D_level']*20
-        self.stats['Current_Mp'] = self.stats['Mp']
+        self.stats['Current_Mp'] = 0
+        #self.stats['Sp'] = 0
+        #self.stats['Mp'] = 0
 
         self.stats['Hp'] = self.stats['Base_Hp']+(self.stats['Level']*15)
         self.stats['Current_Hp'] = self.stats['Hp']
@@ -503,16 +538,17 @@ class Character():
                     if key in total:
                         total[key] += copy[i].stats[key]
         return total
-
+    """
     def update_stats(self,inventory):
-        self.stats['D_level'] = inventory.d_level[self.stats['D_index']]
-        self.stats['Sp'] = self.stats['D_level']*100
+        self.stats['D_Lvl'] = inventory.d_level[self.stats['D_Index']]
+        self.stats['Sp'] = self.stats['D_Lvl']*100
         self.stats['Current_Sp'] = self.stats['Sp']
-        self.stats['Mp'] = self.stats['D_level']*20
+        self.stats['Mp'] = self.stats['D_Lvl']*20
         self.stats['Current_Mp'] = self.stats['Mp']
+    """
 
     def update_field(self,damage,key):
-        self.stats['Current_'+key]-=damage 
+        self.stats['Current_'+key]-= damage 
         if self.stats['Current_'+key] > self.stats[key]:
             self.stats['Current_'+key] = self.stats[key]
         if self.stats['Current_'+key] <= 0:
@@ -547,13 +583,21 @@ class Menu():
             self.image.blit(name,((pos[0]+inventory.avatar_size,pos[1])))
             level = self.font.render('LV '+str(inventory.unlocked_team[inventory.team[i]].stats['Level']), True, white)
             self.image.blit(level,((pos[0]+100+inventory.avatar_size),pos[1]))
-            dlevel = self.font.render("D'LV "+ str(inventory.unlocked_team[inventory.team[i]].stats['D_level']), True, white)
+            if inventory.unlocked_dragoons[inventory.unlocked_team[inventory.team[i]].stats['D_Index']] != None and inventory.d_usability[inventory.unlocked_team[inventory.team[i]].stats['D_Index']]!=None:
+                dlevel = self.font.render("D'LV "+ str(inventory.unlocked_dragoons[inventory.unlocked_team[inventory.team[i]].stats['D_Index']].stats['D_Lvl']), True, white)
+            else:
+                dlevel = self.font.render("D'LV "+ str(0), True, white)
             self.image.blit(dlevel,((pos[0]+inventory.avatar_size),(pos[1]+offset)))
+
             sp = self.font.render('SP '+str(inventory.unlocked_team[inventory.team[i]].stats['Current_Sp']), True, white)
             self.image.blit(sp,((pos[0]+100+inventory.avatar_size),(pos[1]+offset)))
             hp = self.font.render('HP '+str(inventory.unlocked_team[inventory.team[i]].stats['Current_Hp'])+'/'+str(inventory.unlocked_team[inventory.team[i]].stats['Hp']), True, white)
             self.image.blit(hp,((pos[0]+inventory.avatar_size),(pos[1]+(offset*2))))
-            mp = self.font.render('MP '+str(inventory.unlocked_team[inventory.team[i]].stats['Current_Mp'])+'/'+str(inventory.unlocked_team[inventory.team[i]].stats['Mp']), True, white)
+            if inventory.unlocked_dragoons[inventory.unlocked_team[inventory.team[i]].stats['D_Index']] != None and inventory.d_usability[inventory.unlocked_team[inventory.team[i]].stats['D_Index']]!=None:
+                mp = self.font.render('MP '+str(inventory.unlocked_team[inventory.team[i]].stats['Current_Mp'])+'/'+str(inventory.unlocked_dragoons[inventory.unlocked_team[inventory.team[i]].stats['D_Index']].stats['D_Lvl']*20), True, white)
+            else:
+                mp = self.font.render('MP '+str(0)+'/'+str(0), True, white)
+
             self.image.blit(mp,((pos[0]+inventory.avatar_size),(pos[1]+(offset*3))))
             exp = self.font.render('EXP '+str(inventory.unlocked_team[inventory.team[i]].stats['Current_Exp'])+'/'+str(inventory.unlocked_team[inventory.team[i]].stats['Exp']), True, white)
             self.image.blit(exp,((pos[0]+inventory.avatar_size),(pos[1]+(offset*4))))
@@ -680,11 +724,13 @@ class Menu():
         return inventory
 
     def draw_armed(self,screen,inventory,offset):
-        #self.all_unlocked_team = [i for i in range(len(inventory.unlocked_team)) if inventory.unlocked_team[i] != None and inventory.team_usability[i] != None]
-        #Display all weapons that can be used by this character 
-        #self.valid_equipment = [i for i in range(len(inventory.equipment)) if inventory.equipment[i].stats['Equip'] is None and self.all_unlocked_team[self.selected] in inventory.equipment[i].stats['Usage']]
+        self.all_unlocked_team = [i for i in range(len(inventory.unlocked_team)) if inventory.unlocked_team[i] != None and inventory.team_usability[i] != None]
+        #Display all weapons that can be used by this character
+         
+        #And not the ones already used by the character (Todo)
+        self.valid_equipment = [i for i in range(len(inventory.equipment)) if inventory.equipment[i].stats['Equip'] is None and self.all_unlocked_team[self.selected] in inventory.equipment[i].stats['Usage']]
         #print(len(self.valid_equipment))
-        #print(all_unlocked_team)
+        #print(self.all_unlocked_team)
         pos = (offset,offset)
         width = (screen_width-(3*offset))//2
         self.draw_character_box(inventory,pos,offset,width,self.all_unlocked_team[self.selected])
@@ -794,20 +840,10 @@ class Inventory():
         #Name, Attack Damage, Buy, Sell, Effect, 
         #46 unique ones related to certain chars
         self.all_weapons = [[{'Equipment_Name':'Broad Sword','Description':'Initial Weapon','Effect':None,'Buy':None,'Sell':10,'Equip':None,'Slot':0,'Attack':2,'Usage':[0]},
-                             {'Equipment_Name':'Bastard Sword','Description':'Initial Weapon','Effect':None,'Buy':None,'Sell':10,'Equip':None,'Slot':0,'Attack':7,'Usage':[0]}]
+                             {'Equipment_Name':'Bastard Sword','Description':'Initial Weapon','Effect':None,'Buy':60,'Sell':30,'Equip':None,'Slot':0,'Attack':7,'Usage':[0]}]
                             ,[{'Equipment_Name':'Spear','Description':'Initial Weapon','Effect':None,'Buy':None,'Sell':10,'Equip':None,'Slot':0,'Attack':4,'Usage':[1]}],
                             [{'Equipment_Name':'Short Bow','Description':'Initial Weapon','Effect':None,'Buy':None,'Sell':10,'Equip':None,'Slot':0,'Attack':3,'Usage':[2]}]
                            ]
-        """
-        self.all_weapons = [[['Broad Sword',2,None,10,None],
-                             ['Bastard Sword',7,60,30,None],
-                             [],[],[],[],[],[]],
-                            [['Spear',4,None,10,None],
-                             [],[],[],[],[],[]],
-                            [['Short Bow',3,None,10,None],
-                             [],[],[],[],[],[]]
-                            ]
-        """
         self.equipment = []
 
         #Name, Type, Field, Is flat, amount, Targets(Multi), Alive(is targets alive), Targeting Players
@@ -831,11 +867,11 @@ class Inventory():
         self.team = [None]*3
         self.unlocked_team = [None]*9
         self.team_usability = [None]*9
-        self.unlocked_dragoons = [None]*8
-        self.d_usability = [None]*8
-        self.d_level = [1]*8
-        self.d_exp = [0]*8
-        self.d_levels = [100,2000,6000,20000]
+
+        self.unlocked_dragoons = [None]*7
+        self.d_usability = [None]*7
+        self.sp_exp = [None,1000,6000,12000,20000]
+
         self.gold = 0
         self.stardust = 0
 
@@ -958,25 +994,28 @@ class Game():
                             item_selected = False
                     elif self.menu.index == 2:
                         if item_selected:
-                            print(self.menu.selected)
                             item_selected = False
                         else:
                             item_selected = True
                     elif self.menu.index == 3:
-                        player=self.menu.all_unlocked_team[self.menu.selected]
+                        player = self.menu.all_unlocked_team[self.menu.selected]
                         weapon_to_equip = self.inventory.equipment[self.menu.valid_equipment[self.menu.equipment_index]]
-                        #print(weapon_to_equip.stats['Equip'],weapon_to_equip.stats['Slot'])
-                        weapon_to_equip.stats['Equip'] = player
-                        for x in self.inventory.equipment:
-                            if x.stats['Equip'] == player and x.stats['Slot'] == weapon_to_equip.stats['Slot']:
-                                x.stats['Equip'] = None
-                                print(x.stats['Equip'],x.stats['Slot'])
+                        #print('Player',player)
+                        
+                        for i in range(len(self.inventory.equipment)):
+                            #print(x.stats['Equip'],player,x.stats['Slot'],weapon_to_equip.stats['Slot'])
+                            if self.inventory.equipment[i].stats['Equip'] == player and self.inventory.equipment[i].stats['Slot'] == weapon_to_equip.stats['Slot']:
+                                self.inventory.equipment[i].stats['Equip'] = None
+                                #print(self.inventory.equipment[i].stats['Equip'],self.inventory.equipment[i].stats['Slot'])
                                 break
+                        
+                        weapon_to_equip.stats['Equip'] = player
+                        #print(self.inventory.equipment[self.menu.valid_equipment[self.menu.equipment_index]].stats['Equip'])
                         player_to_equip = self.inventory.unlocked_team[player]
                         player_to_equip.equip(weapon_to_equip.stats['Slot'],weapon_to_equip)
                         all_unlocked_team = [i for i in range(len(self.inventory.unlocked_team)) if self.inventory.unlocked_team[i] != None and self.inventory.team_usability[i] != None]
-                        valid_equipment = [i for i in range(len(self.inventory.equipment)) if self.inventory.equipment[i].stats['Equip'] is None and all_unlocked_team[self.menu.selected] in self.inventory.equipment[i].stats['Usage']]
-                        #print(all_unlocked_team,valid_equipment)
+                        valid_equipment = [i for i in range(len(self.inventory.equipment)) if self.inventory.equipment[i].stats['Equip'] is None and self.menu.all_unlocked_team[self.menu.selected] in self.inventory.equipment[i].stats['Usage']]
+                        #print(all_unlocked_team,valid_equipment,self.inventory.equipment[self.menu.valid_equipment[self.menu.equipment_index]].stats['Equip'])
                         self.menu.all_unlocked_team = all_unlocked_team
                         self.menu.valid_equipment = valid_equipment
                               
@@ -985,6 +1024,7 @@ class Game():
                         if self.menu.selected > 0:
                             self.menu.selected -= 1
                             self.menu.equipment_index = 0
+                            
                 if keys[pygame.K_RIGHT]:
                     if self.menu.index == 3:
                         if self.menu.selected < len(self.menu.all_unlocked_team)-1:
@@ -1000,7 +1040,7 @@ class Game():
                     elif self.menu.index == 3:
                         if self.menu.equipment_index > 0:
                             self.menu.equipment_index-=1
-                        print(self.menu.equipment_index)
+                        #print(self.menu.equipment_index)
                     else:
                         if self.menu.index == 2:
                             if self.menu.selected > 0:
@@ -1014,7 +1054,7 @@ class Game():
                         pass
                     elif self.menu.index == 3:
                         if self.menu.equipment_index < len(self.menu.valid_equipment)-1:
-                            self.menu.equipment_index+=1
+                            self.menu.equipment_index += 1
                     else:
                         if self.menu.index == 2:
                             if self.menu.selected < len(self.inventory.items)-1:
@@ -1070,7 +1110,7 @@ class Game():
             sizes = self.stages.npc_dialogue_sizes[self.stages.level][npc_index]
             #print(positions,dialogs,sizes)
             #position[(x,y)],size[],dialogs[,], is_cutscene
-            if previous_entry==False:
+            if previous_entry == False:
                 print('Reentered')
                 #Reset to first dialog
                 display_npc_dialogs = Dialog([ [(positions[0],positions[1])]*len(dialogs),sizes,dialogs,False])                 
@@ -1183,8 +1223,8 @@ class Game():
         """
         Calculate the size of the blue menu background using sprite_size(30) * the number of menu items
         """
-        width=sprite_size*len(all_valid_menu)
-        pos=((screen_width/2)-((sprite_size*len(all_valid_menu))/2),460)
+        width = sprite_size*len(all_valid_menu)
+        pos = ((screen_width/2)-((sprite_size*len(all_valid_menu))/2),460)
         image = fill_box_with_outline(image,pos,(173,216,255,127),None,width,sprite_size)
         
         start = 0
@@ -1214,11 +1254,15 @@ class Game():
                 image.blit(name,(pos[0]+avatar_width+5,pos[1])) 
                 hp = team_font.render('HP '+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Hp'])+'/'+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Hp']), True, white)
                 image.blit(hp,(pos[0]+avatar_width+5,pos[1]+team_font_size))
-                mp = team_font.render('MP '+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Mp'])+'/'+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Mp']), True, white)
+                if self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']] != None and self.inventory.d_usability[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']]!=None:
+                    mp = team_font.render('MP '+str(self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Mp'])+'/'+str(self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']].stats['D_Lvl']*20), True, white)
+                else:
+                    mp = team_font.render('MP '+str(0)+'/'+str(0), True, white)
+
                 image.blit(mp,(pos[0]+avatar_width+5,pos[1]+team_font_size*2))
                 #This needs to get the SP level in integers 0-5 
-                if self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']>0 and self.inventory.d_usability[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_index']]!=None:
-                    sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']
+                if self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']] != None and self.inventory.d_usability[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']]!=None:
+                    sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//(self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']].stats['D_Lvl']*100)
                     if sp_filled != 0:
                         sp_text = team_font.render('SP', True, white)
                         image.blit(sp_text,(pos[0]+avatar_width+5,pos[1]+team_font_size*3)) 
@@ -1228,21 +1272,22 @@ class Game():
         screen.blit(image,image.get_rect())
 
     def draw_sp_bars(self,screen,offset,player_index,team_box_size,team_font_size,sp_box_size,avatar_width,avatar_height):
-        #Highlighting current players turn and drawing sp bars for all
         for i in range(len(self.inventory.team)):
             if self.inventory.team[i] != None:
-                if self.inventory.unlocked_dragoons[self.inventory.team[i]] != None:
+                if self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']] != None:
                     pos = ((offset+((screen_width-(2*offset))//3)*i+(2*5)),500+team_box_size)
                     sp_bar = pygame.Rect(pos[0]+avatar_width+team_font_size,pos[1]+team_font_size*3,sp_box_size,10)
-                    pygame.draw.rect(screen,gray,sp_bar,width=1)
-                    sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']
+                    sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//(self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']].stats['D_Lvl']*100)
+                    print('Sp filled',sp_filled)
                     #Colors for dragoons 1-5
                     colors = [blue,green,yellow,orange,red]
                     if sp_filled != 0:
+                        pygame.draw.rect(screen,gray,sp_bar,width=1)
                         pygame.draw.rect(screen,colors[sp_filled-1],sp_bar)
                             
-                    sp_leftover = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']%self.inventory.unlocked_team[self.inventory.team[i]].stats['Sp']
-                    sp_fill_size = sp_leftover*sp_box_size
+                    sp_leftover = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']%(self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']].stats['D_Lvl']*100)
+                    print('Sp leftover',sp_leftover)
+                    sp_fill_size = (sp_leftover/100)*sp_box_size
                     sp_fill_bar = pygame.Rect(pos[0]+avatar_width+team_font_size,pos[1]+team_font_size*3,sp_fill_size,10)
                     if sp_filled == 0:
                         pygame.draw.rect(screen,blue,sp_fill_bar)
@@ -1296,7 +1341,7 @@ class Game():
     
             x = center_x + radius*cos(angle)
             y = center_y + radius*sin(angle)
-            print(x,y)
+            #print(x,y)
             pygame.draw.circle(screen,blue,(x,y),5)
 
             pygame.display.flip()
@@ -1326,7 +1371,7 @@ class Game():
                 break
             screen.fill(white)
             if seconds > 0:
-                enemy_npcs.sprites()[enemy_index].rect.topleft=((x+(offset_x*(seconds/2))),(y+(offset_y*(seconds/2))))
+                enemy_npcs.sprites()[enemy_index].rect.topleft = ((x+(offset_x*(seconds/2))),(y+(offset_y*(seconds/2))))
                 enemy_npcs.sprites()[enemy_index].update()
                 enemy_npcs.sprites()[enemy_index].draw(screen)
             pygame.display.flip()
@@ -1409,6 +1454,11 @@ class Game():
         damage = equipment_total['Attack']*(((hits/total_hits)/100)*(self.inventory.all_additions[row][col][5][self.inventory.addition_counts[row][col]//20]))
         print('I did ',damage,equipment_total['Attack'],hits,((hits/total_hits)/100))
         
+        """
+        Add completed addition, sp and what ever.
+        """
+        self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Current_Sp']+=50
+        print('I have ',self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Current_Sp'])
         #print(enemy_npcs.sprites()[enemy_index].stats['Hp'])
         """
         Target all targets you can have
@@ -1543,7 +1593,7 @@ class Game():
                                 if self.inventory.unlocked_team[i].stats['Current_Sp'] >= 100:
                                     pass
                                 else:
-                                    is_visible[6]=-1
+                                    is_visible[6] = -1
                                     break
                         #is_visible[6] = (-1,5) [all( self.inventory.unlocked_team[i].stats['Current_Sp'] >= 100 for i in self.inventory.team)] 
                         #print('PLAYER TURN')
@@ -1560,7 +1610,7 @@ class Game():
                                 is_multi = False
                                 targeting_players = False
                                 target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players)
-                                print(target_indexes)
+                                #print(target_indexes)
                                 if target_indexes != -1:
                                     enemy_npcs = self.display_attacking(screen,player_index,target_indexes,enemy_npcs)
                                     valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].stats['Current_Hp']>0]
@@ -1584,7 +1634,7 @@ class Game():
                                     items = list(self.inventory.items.items())
                                     if len(items) != 0:
                                         #Name, Type, Field, Is flat, Amount, Targets(Multi), Alive(is targets alive), targeting_players
-                                        print(items[item_index][0])
+                                        #print(items[item_index][0])
                                         item_id = -1
                                         for i in range(len(self.inventory.all_items)):
                                             if self.inventory.all_items[i][0] == items[item_index][0]:
@@ -1602,7 +1652,7 @@ class Game():
                                                         heal_amount = self.inventory.all_items[item_id][4]
                                                     else:
                                                         heal_amount = int((self.inventory.unlocked_team[target].stats[[item_id][2]]/100)*self.inventory.all_items[item_id][4])
-                                                    print(heal_amount)
+                                                    #print(heal_amount)
                                                     self.inventory.unlocked_team[target].update_field(-heal_amount,[item_id][2])
 
                                             self.inventory.update_item(item_id,-1)
@@ -1669,7 +1719,7 @@ class Game():
                         image = fill_box_with_outline(image,(team_box.x,team_box.y),dialog_background,yellow,team_box.width,team_box.height,team_box_border_size)
                         image = fill_box_with_outline(image,(((screen_width/2)+(sprite_size*index)-((sprite_size*len(all_valid_menu))/2)),460),red,None,sprite_size,sprite_size)
                         avatar_pos = (self.offset+(((screen_width-(2*self.offset))//3)*player_index),500+team_box_border_size-(5))
-                        print(avatar_pos,avatar_width,avatar_height)
+                        #print(avatar_pos,avatar_width,avatar_height)
                         image = fill_box_with_outline(image,avatar_pos,white,None,avatar_width+(2*5),avatar_height+(2*5),5)
 
                         self.draw_battle_menu(screen,image,player_index,index,self.offset,options,all_valid_menu,is_visible,
@@ -1720,7 +1770,7 @@ class Game():
                 for i in range(len(enemy_npcs)):
                     if enemy_npcs.sprites()[i].stats['Current_Hp']>0:
                         damage = enemy_npcs.sprites()[i].stats['Attack']
-                        print(damage)
+                        #print(damage)
                         valid_player_targets = []
                         for player in self.inventory.team:
                             if player != None:
@@ -1761,7 +1811,7 @@ class Game():
                 enemy_npcs = pygame.sprite.Group()
                 enemy_list = x[4]
                 for j in range(len(enemy_list)):
-                    print(j,enemy_list)
+                    #print(j,enemy_list)
                     #print(self.stages.enemy_images[j])
                     #print(self.stages.enemy_base_stats[j])
                     new_npc = Npc((100+(j*100),100),self.stages.enemy_images[enemy_list[j]],self.stages.enemy_base_stats[enemy_list[j]])
@@ -1772,7 +1822,7 @@ class Game():
                 When leveling skip the master one only update it when leveling moves
                 Up to len(self.inventory.all_additions[index])
                 """
-                print(self.stages.enemy_positions[self.stages.level][i])
+                #print(self.stages.enemy_positions[self.stages.level][i])
                 del self.stages.enemy_positions[self.stages.level][i]
                 break
 
@@ -1850,13 +1900,16 @@ class Game():
     def update_dragoons(self,index):
         if index >= 0:
             if self.inventory.unlocked_dragoons[index] == None:
-                self.inventory.unlocked_dragoons[index] = 0
-            self.inventory.d_usability[index]=0
-            
+                self.inventory.unlocked_dragoons[index] = Dragoon(dragoon_stats[index])
+            self.inventory.d_usability[index] = 0
+            """
             for player in self.inventory.unlocked_team:
                 if player != None:
-                    if player.stats['D_index'] == index:
+                    if player.stats['D_Index'] == index:
                         player.update_stats(self.inventory)
+            
+            """
+            
         else:
             pass
 
@@ -1890,11 +1943,11 @@ class Game():
             #print(self.inventory.all_weapons[item[1][0]][item[1][1]])
             new_eq = Equipment(self.inventory.all_weapons[item[1][0]][item[1][1]])
             self.inventory.update_equipment(new_eq,item[3])
-            print(item[2])
+            #print(item[2])
             if item[2] != None:
                 self.inventory.equipment[-1].stats['Equip'] = item[2]
                 self.inventory.unlocked_team[item[2]].equip(self.inventory.equipment[-1].stats['Slot'],self.inventory.equipment[-1])
-            print(self.inventory.equipment[-1].stats['Equip'])
+            #print(self.inventory.equipment[-1].stats['Equip'])
         elif item[0]==2:
             pass
         else:
