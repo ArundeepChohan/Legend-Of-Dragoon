@@ -261,7 +261,7 @@ class Cutscene():
         self.unlock_players = [0, 1, 2, None]
         self.unlock_dragoons = [0, None, None, None]
         #Type(Item, Weapon, Armour), id(y,x), to equip(if not none equip to unlocked_team), quantity(normally 1)
-        self.unlock_inventory = [[1,[0,0],0,1],[1,[1,0],1,1],[1,[2,0],2,1],[1,[0,1],None,20]]
+        self.unlock_inventory = [[[1,[0,0],0,1]],[[1,[1,0],1,1]],[[1,[2,0],2,1]],[[1,[0,1],None,20]]]
 
         #Reworked to use dialogs per cutscene video with multiple dialogs in concession
         self.dialog = [['The Green Tusked Dragon, Feyrbrand.'],
@@ -431,7 +431,7 @@ class Stage():
     #Check if exit is a cutscene then proceed to change self.state to -1, or -2 to a map, 0 to normal. 
     def update_stage_level(self,level,index,x,y):
         self.boundary_index = index
-        if level ==-1: 
+        if level == -1: 
             self.level += 1
             self.npc_list = pygame.sprite.Group()
             #x,y,size
@@ -496,11 +496,8 @@ class Character():
     #Calculate the other stats (ToDo) 
     def __init__(self,stats):
         self.stats = stats
-        #self.stats['D_Lvl'] = None
         self.stats['Current_Sp'] = 0
         self.stats['Current_Mp'] = 0
-        #self.stats['Sp'] = 0
-        #self.stats['Mp'] = 0
 
         self.stats['Hp'] = self.stats['Base_Hp']+(self.stats['Level']*15)
         self.stats['Current_Hp'] = self.stats['Hp']
@@ -538,14 +535,6 @@ class Character():
                     if key in total:
                         total[key] += copy[i].stats[key]
         return total
-    """
-    def update_stats(self,inventory):
-        self.stats['D_Lvl'] = inventory.d_level[self.stats['D_Index']]
-        self.stats['Sp'] = self.stats['D_Lvl']*100
-        self.stats['Current_Sp'] = self.stats['Sp']
-        self.stats['Mp'] = self.stats['D_Lvl']*20
-        self.stats['Current_Mp'] = self.stats['Mp']
-    """
 
     def update_field(self,damage,key):
         self.stats['Current_'+key]-= damage 
@@ -563,17 +552,22 @@ class Menu():
         img = pygame.image.load(os.path.join('.//assets//menu//background.png')).convert()
         self.bg = pygame.transform.scale(img,((screen_width,screen_height)))
         #Which page of the menu and what selected everytime I move a page just make selected 0
+        self.item_selected = False
+        self.item_menu = False
         self.equipment_index = 0
+        self.player_selected = 0
         self.all_unlocked_team = None
         self.valid_equipment = None
         self.selected = 0
         self.index = 0
         self.options = ['Status','Item','Armed','Addition','Replace','Config','Save']
 
-
     def draw_character_box(self,inventory,pos,offset,width,i):
         height = (screen_height-(2*offset)-(2*offset))//3
-        self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
+        if i == self.player_selected and self.item_selected:
+            self.image = fill_box_with_outline(self.image,pos,menu_background,red,width,height)
+        else:
+            self.image = fill_box_with_outline(self.image,pos,menu_background,black,width,height)
         
         if inventory.team[i] != None:
             avatar = pygame.transform.smoothscale(inventory.avatars[inventory.team[i]],((inventory.avatar_size,inventory.avatar_size)))
@@ -675,7 +669,7 @@ class Menu():
         total_height += (screen_height-(2*offset)-(2*offset))//2 + offset
         self.draw_time(inventory,offset,width,total_height)
         
-        if self.index == 2:
+        if self.index == 2 and self.item_menu:
             self.draw_items(inventory,offset)
 
         height = ((screen_height-(2*offset))//3)
@@ -962,8 +956,9 @@ class Game():
     def display_menu(self,screen):
         clock = pygame.time.Clock()
         running = True
-        item_selected = False
         self.menu.equipment_index = 0
+        self.menu.item_menu = False
+        self.menu.player_selected = 0
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -978,11 +973,12 @@ class Game():
                             if len(items) != 0:
                                 self.menu.selected = 0
                                 self.menu.index = 2
-                                item_selected = False
+                                self.menu.item_menu = True
+                                #item_menu = True
                         elif self.menu.options[self.menu.selected] == 'Armed':
                             self.menu.selected = 0
                             self.menu.index = 3
-                            item_selected = False
+                            self.menu.item_menu = False
                             all_unlocked_team = [i for i in range(len(self.inventory.unlocked_team)) if self.inventory.unlocked_team[i] != None and self.inventory.team_usability[i] != None]
                             valid_equipment = [i for i in range(len(self.inventory.equipment)) if self.inventory.equipment[i].stats['Equip'] is None and all_unlocked_team[self.menu.selected] in self.inventory.equipment[i].stats['Usage']]
                             #print(all_unlocked_team,valid_equipment)
@@ -991,12 +987,35 @@ class Game():
                         elif self.menu.options[self.menu.selected] == 'Replace':
                             self.menu.selected = 0
                             self.menu.index = 5
-                            item_selected = False
+                            self.menu.item_menu = False
                     elif self.menu.index == 2:
-                        if item_selected:
-                            item_selected = False
-                        else:
-                            item_selected = True
+                        print(self.menu.item_menu)
+                        if self.menu.item_menu:
+                            if self.menu.item_selected:
+                                item = list(self.inventory.items.items())[self.menu.selected]
+                                """
+                                Check if it's recovery and non multi
+                                (todo)
+                                """
+                                item_id = -1
+                                for i in range(len(self.inventory.all_items)):
+                                    if self.inventory.all_items[i][0] == item[0][0]:
+                                        item_id = i
+                                        break
+                                print(self.inventory.all_items[item_id][1])
+                                print(item)
+                                if self.inventory.all_items[item_id][1] == 'Recover':
+                                    if not self.inventory.all_items[item_id][3]:
+                                        pass
+                                    else:
+                                        self.menu.player_selected = 0
+                            else:
+                                self.menu.item_selected = True
+                                
+
+                            #self.menu.item_selected = False
+                            #item_selected = False
+                        
                     elif self.menu.index == 3:
                         player = self.menu.all_unlocked_team[self.menu.selected]
                         weapon_to_equip = self.inventory.equipment[self.menu.valid_equipment[self.menu.equipment_index]]
@@ -1035,37 +1054,48 @@ class Game():
                     if self.menu.index == 0:
                         if self.menu.selected > 0:
                             self.menu.selected -= 1 
-                    if item_selected:
-                        pass
+                   
                     elif self.menu.index == 3:
                         if self.menu.equipment_index > 0:
-                            self.menu.equipment_index-=1
+                            self.menu.equipment_index -= 1
                         #print(self.menu.equipment_index)
                     else:
                         if self.menu.index == 2:
-                            if self.menu.selected > 0:
-                                self.menu.selected -= 1 
+                            if self.menu.item_menu:
+                                if self.menu.item_selected:
+                                    if self.menu.player_selected > 0:
+                                        self.menu.player_selected -=1
+                                else:
+                                    if self.menu.selected > 0:
+                                        self.menu.selected -= 1 
                         
                 if keys[pygame.K_DOWN]:
                     if self.menu.index == 0:
                         if self.menu.selected < len(self.menu.options)-1:
                             self.menu.selected += 1 
-                    if item_selected:
-                        pass
                     elif self.menu.index == 3:
                         if self.menu.equipment_index < len(self.menu.valid_equipment)-1:
                             self.menu.equipment_index += 1
                     else:
                         if self.menu.index == 2:
-                            if self.menu.selected < len(self.inventory.items)-1:
-                                self.menu.selected += 1 
+                            if self.menu.item_menu:
+                                if self.menu.item_selected:
+                                    if self.menu.player_selected < len(self.inventory.team)-1:
+                                        self.menu.player_selected += 1
+                                        
+                                else:
+                                    if self.menu.selected < len(self.inventory.items)-1:
+                                        self.menu.selected += 1 
                 if keys[pygame.K_BACKSPACE]:
                     if self.menu.index == 2:
-                        if item_selected:
-                            item_selected = False
-                        else:
-                            self.menu.index = 0
-                            self.menu.selected = 1 
+                        if self.menu.item_menu:
+                            if self.menu.item_selected:
+                                self.menu.item_selected = False
+                                self.menu.player_selected = 0
+                            else:
+                                self.menu.item_menu = False
+                                self.menu.index = 0
+                                self.menu.selected = 1 
                     elif self.menu.index == 3:
                         self.menu.index = 0
                         self.menu.selected = 2 
@@ -1263,15 +1293,15 @@ class Game():
                 #This needs to get the SP level in integers 0-5 
                 if self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']] != None and self.inventory.d_usability[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']]!=None:
                     sp_filled = self.inventory.unlocked_team[self.inventory.team[i]].stats['Current_Sp']//(self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']].stats['D_Lvl']*100)
+                    sp_text = team_font.render('SP', True, white)
+                    image.blit(sp_text,(pos[0]+avatar_width+5,pos[1]+team_font_size*3)) 
                     if sp_filled != 0:
-                        sp_text = team_font.render('SP', True, white)
-                        image.blit(sp_text,(pos[0]+avatar_width+5,pos[1]+team_font_size*3)) 
                         sp_filled_amount = team_font.render(str(sp_filled), True, white)
                         image.blit(sp_filled_amount,(pos[0]+avatar_width+sp_box_size+team_font_size+5,pos[1]+team_font_size*3)) 
 
         screen.blit(image,image.get_rect())
 
-    def draw_sp_bars(self,screen,offset,player_index,team_box_size,team_font_size,sp_box_size,avatar_width,avatar_height):
+    def draw_sp_bars(self,screen,offset,team_box_size,team_font_size,sp_box_size,avatar_width,):
         for i in range(len(self.inventory.team)):
             if self.inventory.team[i] != None:
                 if self.inventory.unlocked_dragoons[self.inventory.unlocked_team[self.inventory.team[i]].stats['D_Index']] != None:
@@ -1388,7 +1418,7 @@ class Game():
         attack_box = pygame.Rect(screen_width/2,screen_height/2,attack_box_size,attack_box_size)  
         attacking = True
         start_ticks = pygame.time.get_ticks()
-        enemy_npcs.sprites()[enemy_index].rect.topleft=(screen_width/2,screen_height/2)
+        enemy_npcs.sprites()[enemy_index].rect.topleft = (screen_width/2,screen_height/2)
 
         while attacking:
             seconds = (pygame.time.get_ticks()-start_ticks)/1000
@@ -1451,13 +1481,17 @@ class Game():
             if key in body_total:
                 equipment_total[key] += body_total[key]
 
-        damage = equipment_total['Attack']*(((hits/total_hits)/100)*(self.inventory.all_additions[row][col][5][self.inventory.addition_counts[row][col]//20]))
-        print('I did ',damage,equipment_total['Attack'],hits,((hits/total_hits)/100))
+        hit_percent=(hits/total_hits)/100
+        damage = round(equipment_total['Attack']*((hit_percent)*(self.inventory.all_additions[row][col][5][self.inventory.addition_counts[row][col]//20])))
+        print('I did ',damage,equipment_total['Attack'],hits,(hit_percent))
         
         """
-        Add completed addition, sp and what ever.
+        Add completed addition, sp
         """
-        self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Current_Sp']+=50
+        sp_amount = round(self.inventory.all_additions[row][col][1][self.inventory.addition_counts[row][col]//20]*(hits/total_hits))
+        print(sp_amount)
+        self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Current_Sp']+=sp_amount
+        
         print('I have ',self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Current_Sp'])
         #print(enemy_npcs.sprites()[enemy_index].stats['Hp'])
         """
@@ -1472,7 +1506,7 @@ class Game():
 
     def increment_player(self,player_index):
         while player_index < len(self.inventory.team):
-            player_index+=1
+            player_index += 1
             if player_index == len(self.inventory.team):
                 break
             if self.inventory.unlocked_team[player_index] != None:
@@ -1651,9 +1685,9 @@ class Game():
                                                     if self.inventory.all_items[item_id][3]:
                                                         heal_amount = self.inventory.all_items[item_id][4]
                                                     else:
-                                                        heal_amount = int((self.inventory.unlocked_team[target].stats[[item_id][2]]/100)*self.inventory.all_items[item_id][4])
-                                                    #print(heal_amount)
-                                                    self.inventory.unlocked_team[target].update_field(-heal_amount,[item_id][2])
+                                                        heal_amount = int((self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]]/100)*self.inventory.all_items[item_id][4])
+                                                    print(heal_amount)
+                                                    self.inventory.unlocked_team[target].update_field(-heal_amount,self.inventory.all_items[item_id][2])
 
                                             self.inventory.update_item(item_id,-1)
                                             item_selection = False
@@ -1721,12 +1755,9 @@ class Game():
                         avatar_pos = (self.offset+(((screen_width-(2*self.offset))//3)*player_index),500+team_box_border_size-(5))
                         #print(avatar_pos,avatar_width,avatar_height)
                         image = fill_box_with_outline(image,avatar_pos,white,None,avatar_width+(2*5),avatar_height+(2*5),5)
-
                         self.draw_battle_menu(screen,image,player_index,index,self.offset,options,all_valid_menu,is_visible,
                         team_box_border_size,team_font,team_font_size,avatar_width,avatar_height,sp_box_size,sprite_size)
-                        #pygame.draw.rect(screen,yellow,team_box,width=team_box_size)
-                        
-                        self.draw_sp_bars(screen,self.offset,player_index,team_box_border_size,team_font_size,sp_box_size,avatar_width,avatar_height)
+                        self.draw_sp_bars(screen,self.offset,team_box_border_size,team_font_size,sp_box_size,avatar_width)
 
                         if item_selection:
                             #Rework use screen_width and screen_height (Todo)
@@ -1939,7 +1970,7 @@ class Game():
     """
     def update_inventory(self,item):
         #print(item)
-        if item[0]==1:
+        if item[0] == 1:
             #print(self.inventory.all_weapons[item[1][0]][item[1][1]])
             new_eq = Equipment(self.inventory.all_weapons[item[1][0]][item[1][1]])
             self.inventory.update_equipment(new_eq,item[3])
@@ -1948,7 +1979,7 @@ class Game():
                 self.inventory.equipment[-1].stats['Equip'] = item[2]
                 self.inventory.unlocked_team[item[2]].equip(self.inventory.equipment[-1].stats['Slot'],self.inventory.equipment[-1])
             #print(self.inventory.equipment[-1].stats['Equip'])
-        elif item[0]==2:
+        elif item[0] == 2:
             pass
         else:
             self.inventory.update_item(item[1][0],item[3])   
@@ -1961,8 +1992,9 @@ class Game():
                 self.update_char(self.cutscenes.unlock_players[self.cutscenes.level])
             if self.cutscenes.unlock_dragoons[self.cutscenes.level] != None:
                 self.update_dragoons(self.cutscenes.unlock_dragoons[self.cutscenes.level])
-            if self.cutscenes.unlock_inventory[self.cutscenes.level] != None:
-                self.update_inventory(self.cutscenes.unlock_inventory[self.cutscenes.level])
+            if len(self.cutscenes.unlock_inventory[self.cutscenes.level]) != 0:
+                for x in self.cutscenes.unlock_inventory[self.cutscenes.level]:
+                    self.update_inventory(x)
            
         self.state = self.cutscenes.next_state[self.cutscenes.level]
         self.cutscenes.level += 1
