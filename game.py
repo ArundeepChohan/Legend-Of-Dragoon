@@ -36,45 +36,46 @@ dialog_background = (0, 0, 255, 200)
 menu_background = (185,155,90)
 
 #name, level, hp, attack, weapon(row,col), addition index(Pass the same to Lavitz/Albert due to count)
-#base_stats = [('Dart',1,0,15,2,0,0,0),('Lavitz',None,1,17,3,1,0,1),('Shana',None,2,12,1,2,0,2)]
-base_stats = [{'Name':'Dart','Level':1,'D_Index':0,'Addition_index':0,'Type':'Fire',
-                'Base_Hp':15,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0},
-              {'Name':'Lavitz','Level':1,'D_Index':1,'Addition_index':1,'Type':'Wind',
-                'Base_Hp':17,'Base_Attack':3,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0},
-              {'Name':'Shana','Level':1,'D_Index':2,'Addition_index':2,'Type':'Light',
-                'Base_Hp':12,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0}]
+base_stats =    [   
+                    {'Name':'Dart','Level':1,'D_Index':0,'Addition_index':0,'Type':'Fire',
+                    'Base_Hp':15,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0},
+                    {'Name':'Lavitz','Level':1,'D_Index':1,'Addition_index':1,'Type':'Wind',
+                    'Base_Hp':17,'Base_Attack':3,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0},
+                    {'Name':'Shana','Level':1,'D_Index':2,'Addition_index':2,'Type':'Light',
+                    'Base_Hp':12,'Base_Attack':2,'Base_Defense':0,'Base_Matk':0,'Base_Mdef':0}
+                ]
 
 """
-Basically STR is attack, RECOVER is heal, Revive is set dead char to 1 hp,and DAMAGE RESIST is reduced damage for duration
+Basically STR is attack, RECOVER is heal, REVIVE is set dead char to 1 hp,and DAMAGE RESIST is reduced damage for duration
 """
 dragoon_stats = [
                     {'Type':'Fire','D_Lvl':1,'Exp':0,'Base_Attack':[150,155,160,165,170],'Base_Defense':[200,210,220,230,250],
                     'Base_Matk':[150,155,160,165,170],'Base_Mdef':[200,210,220,230,250],
                     'Magic':[
-                        {'D_Lvl':1,'Effect':['STR'],'Spell_Name':'Flame Shot','Mp':10,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[50]},
-                        {'D_Lvl':2,'Effect':['STR'],'Spell_Name':'Explosion','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
-                        {'D_Lvl':3,'Effect':['STR'],'Spell_Name':'Final Burst','Mp':30,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[75]},
-                        {'D_Lvl':5,'Effect':['STR'],'Spell_Name':'Red-Eyed Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[175]},
+                        {'D_Lvl':1,'Effect':['Str'],'Spell_Name':'Flame Shot','Mp':10,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[50]},
+                        {'D_Lvl':2,'Effect':['Str'],'Spell_Name':'Explosion','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
+                        {'D_Lvl':3,'Effect':['Str'],'Spell_Name':'Final Burst','Mp':30,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[75]},
+                        {'D_Lvl':5,'Effect':['Str'],'Spell_Name':'Red-Eyed Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[175]},
                     ]},
                     {'Type':'Wind','D_Lvl':1,'Exp':0,'Base_Attack':[150,155,160,165,170],'Base_Defense':[200,210,220,230,250],
                     'Base_Matk':[200,205,210,215,220],'Base_Mdef':[200,210,220,230,250],
                     'Magic':[
-                        {'D_Lvl':1,'Effect':['STR'],'Spell_Name':'Wing Blaster','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
-                        {'D_Lvl':2,'Effect':['DAMAGE RESIST'],'Spell_Name':'Rose Storm','Mp':20,'Is_Multi':True,'Is_Enemy':[False],'Modifier':[50,3]},
-                        {'D_Lvl':3,'Effect':['STR'],'Spell_Name':'Gaspless','Mp':30,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[100]},
+                        {'D_Lvl':1,'Effect':['Str'],'Spell_Name':'Wing Blaster','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
+                        {'D_Lvl':2,'Effect':['Dmg Resist'],'Spell_Name':'Rose Storm','Mp':20,'Is_Multi':True,'Is_Enemy':[False],'Modifier':[50,3]},
+                        {'D_Lvl':3,'Effect':['Str'],'Spell_Name':'Gaspless','Mp':30,'Is_Multi':False,'Is_Enemy':[True],'Modifier':[100]},
                         {'D_Lvl':5,'Effect':['STR'],'Spell_Name':'Jade Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[75]},
                     ]},
 
                     {'Type':'Light','D_Lvl':1,'Exp':0,'Base_Attack':[200,205,210,215,220],'Base_Defense':[200,210,220,230,250],
                     'Base_Matk':[150,155,160,165,170],'Base_Mdef':[200,210,220,230,250],
                     'Magic':[
-                        {'D_Lvl':1,'Effect':['REVIVE','RECOVER'],'Spell_Name':'Moon Light','Mp':10,'Is_Multi':False,'Is_Enemy':[False],'Modifier':[1,100]},
-                        {'D_Lvl':2,'Effect':['STR'],'Spell_Name':'Star Children','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
-                        {'D_Lvl':3,'Effect':['RECOVER'],'Spell_Name':'Gates of Heaven','Mp':30,'Is_Multi':True,'Is_Enemy':[False],'Modifier':[100]},
-                        {'D_Lvl':5,'Effect':['STR','RECOVER'],'Spell_Name':'W Silver Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True,False],'Modifier':[100,100]},
+                        {'D_Lvl':1,'Effect':['Revive','Recover'],'Spell_Name':'Moon Light','Mp':10,'Is_Multi':False,'Is_Enemy':[False],'Modifier':[1,100]},
+                        {'D_Lvl':2,'Effect':['Str'],'Spell_Name':'Star Children','Mp':20,'Is_Multi':True,'Is_Enemy':[True],'Modifier':[25]},
+                        {'D_Lvl':3,'Effect':['Recover'],'Spell_Name':'Gates of Heaven','Mp':30,'Is_Multi':True,'Is_Enemy':[False],'Modifier':[100]},
+                        {'D_Lvl':5,'Effect':['Str','Recover'],'Spell_Name':'W Silver Dragon','Mp':80,'Is_Multi':True,'Is_Enemy':[True,False],'Modifier':[100,100]},
                     ]}
+                ]               
 
-]               
 class Dragoon():
     def __init__(self,stats):
         self.stats=stats
@@ -116,12 +117,11 @@ class Spritesheet(object):
         return self.images_at(tups, colorkey)
 
 class Chest(pygame.sprite.Sprite):
-    def __init__(self,position,id,quantity,type_unlocked):
+    def __init__(self,position,items):
         pygame.sprite.Sprite.__init__(self)
-        self.item_id = id
-        self.quantity = quantity
-        #What can I unlock from chest? item, weapon, armour(0,1,2)
-        self.type_unlocked = type_unlocked
+        #What can I unlock from chest? item, weapon, armour(0,1,2) with x amount of quantities
+        self.contains = items
+
         self.all_spritesheets = Spritesheet(os.path.join('assets/sprites', 'sprites.png'))
         self.image = self.all_spritesheets.image_at((7.5+(1*15),42.5,15,20), colorkey=black)
         self.rect = self.image.get_rect()
@@ -166,11 +166,11 @@ class Npc(pygame.sprite.Sprite):
 
         self.image = self.images[self.state][self.frame]
 
-    def update_field(self,damage,key):
+    def update_field(self,damage,key,max):
         #print(key)
         self.stats['Current_'+key]-=damage 
-        if self.stats['Current_'+key] > self.stats[key]:
-            self.stats['Current_'+key] = self.stats[key]
+        if self.stats['Current_'+key] > max:
+            self.stats['Current_'+key] = max
         if self.stats['Current_'+key] <= 0:
             self.stats['Current_'+key] = 0
             if key == 'Hp':
@@ -414,18 +414,18 @@ class Stage():
                               [self.npc_sprite_sheet.image_at((135+(80*i),397,65,68), colorkey=black) for i in range(7)]],
                              [[self.npc_sprite_sheet.image_at((135+(80*i),20,65,50), colorkey=black) for i in range(7)]], 
                             ]
-        self.enemy_base_stats = [ {'Name':'Knight','Level':1,'D_index':None,'Type':None,'Hp':5,'Attack':3,'Defense':0,'Matk':0,'Mdef':0},{'Name':'Commander','Level':1,'D_index':None,'Type':None,'Hp':15,'Attack':5,'Defense':0,'Matk':0,'Mdef':0}]
+        self.enemy_base_stats = [ {'Name':'Knight','Level':1,'D_index':None,'Type':None,'Hp':5,'Attack':3,'Defense':0,'Matk':0,'Mdef':0,'Minor':True},{'Name':'Commander','Level':1,'D_index':None,'Type':None,'Hp':15,'Attack':5,'Defense':0,'Matk':0,'Mdef':0,'Minor':True}]
         #This is for random battles
         self.enemies_by_level = [[0],[0],[0]]
 
-        #Place an item with the location, id, quantity, either item, armor, weapon
+        #Place an item with the location, either (item, weapon, armor), id, quantity, 
         self.chest_list = pygame.sprite.Group()
-        self.chest_locations = [[[400,500,0,1,0]],
-                                [[100,100,0,1,0]]
+        self.chest_locations = [[[400,500,[[0,0,1],[0,1,5]]]],
+                                [[100,100,[[0,0,1],[0,1,5]]]]
                                ]
 
         for item in self.chest_locations[self.level]:
-            new_item = Chest((item[0],item[1]),item[2],item[3],item[4])
+            new_item = Chest((item[0],item[1]),item[2])
             self.chest_list.add(new_item)
         
     #Check if exit is a cutscene then proceed to change self.state to -1, or -2 to a map, 0 to normal. 
@@ -440,7 +440,7 @@ class Stage():
                 self.npc_list.add(new_npc)
             self.chest_list = pygame.sprite.Group()
             for item in self.chest_locations[self.level]:
-                new_item = Chest((item[0],item[1]),item[2],item[3],item[4])
+                new_item = Chest((item[0],item[1]),item[2])
                 self.chest_list.add(new_item)
         elif level == -2:
             pass
@@ -453,7 +453,7 @@ class Stage():
                 self.npc_list.add(new_npc)
             self.chest_list = pygame.sprite.Group()
             for item in self.chest_locations[self.level]:
-                new_item = Chest((item[0],item[1]),item[2],item[3],item[4])
+                new_item = Chest((item[0],item[1]),item[2])
                 self.chest_list.add(new_item)
         self.player.movex = 0
         self.player.movey = 0
@@ -536,10 +536,10 @@ class Character():
                         total[key] += copy[i].stats[key]
         return total
 
-    def update_field(self,damage,key):
+    def update_field(self,damage,key,max):
         self.stats['Current_'+key]-= damage 
-        if self.stats['Current_'+key] > self.stats[key]:
-            self.stats['Current_'+key] = self.stats[key]
+        if self.stats['Current_'+key] > max:
+            self.stats['Current_'+key] = max
         if self.stats['Current_'+key] <= 0:
             self.stats['Current_'+key] = 0
 
@@ -608,7 +608,7 @@ class Menu():
             pos = (offset+offset/2+screen_width/4,((screen_height-(2*offset))/4)+offset+((2)*offset)+(offset/2)+(i*30))
             #print(pos)
             #print(items[i])
-            if i == self.selected:
+            if i == 0:
                 color = red
             else:
                 color = white
@@ -719,9 +719,9 @@ class Menu():
 
     def draw_armed(self,screen,inventory,offset):
         self.all_unlocked_team = [i for i in range(len(inventory.unlocked_team)) if inventory.unlocked_team[i] != None and inventory.team_usability[i] != None]
-        #Display all weapons that can be used by this character
-         
-        #And not the ones already used by the character (Todo)
+        """
+        Display all weapons that can be used by this character and not the ones already used by the character 
+        """
         self.valid_equipment = [i for i in range(len(inventory.equipment)) if inventory.equipment[i].stats['Equip'] is None and self.all_unlocked_team[self.selected] in inventory.equipment[i].stats['Usage']]
         #print(len(self.valid_equipment))
         #print(self.all_unlocked_team)
@@ -840,8 +840,13 @@ class Inventory():
                            ]
         self.equipment = []
 
-        #Name, Type, Field, Is flat, amount, Targets(Multi), Alive(is targets alive), Targeting Players
-        self.all_items = [['Health Potion','Recover', 'Hp', False, 50, False, True, True]]
+        #Name, Type, Field, Is flat, amount, Targets(Multi), Alive(is targets alive), Targeting Players, Buy
+        self.all_items = [['Health Potion',['Recover'], 'Hp', False, [50], False, True, True,10],
+                          ['Healing Breeze',['Recover'],'Hp', False, [50], True, True, True, 50],
+                          ['Health Fog',['Recover'], 'Hp', False, [100], False, True, True,30],
+                          ['Health Rain',['Recover'], 'Hp', False, [100], True, True, True,None],
+                          ['Angel Prayer',['Revive','Recover'], 'Hp', False, [1,50], False, False, True,10],
+                          ]
         self.items = OrderedDict()
         """
         Scroll Testing for items in menu
@@ -953,6 +958,50 @@ class Game():
             pygame.display.flip()
             clock.tick(FPS)     
 
+    def pick_item_targets(self,screen,is_multi,is_alive,targeting_players):
+        if not targeting_players:
+            return -1
+
+        if is_multi:
+            if is_alive:
+                return [player for player in self.inventory.team if player != None and self.inventory.unlocked_team[player]!=None and self.inventory.unlocked_team[player].stats['Current_Hp']>0]
+            else:
+                return [player for player in self.inventory.team if player != None and self.inventory.unlocked_team[player]!=None and self.inventory.unlocked_team[player].stats['Current_Hp']<=0]
+        else:
+            pass
+
+        clock = pygame.time.Clock()
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                keys = pygame.key.get_pressed()  
+                if keys[pygame.K_RETURN]:
+                    return [self.inventory.team[self.menu.player_selected]]
+                if keys[pygame.K_BACKSPACE]:
+                    return -1
+                if keys[pygame.K_UP]:
+                    if self.menu.index == 2:
+                        if self.menu.item_menu:
+                            if self.menu.item_selected:
+                                if self.menu.player_selected > 0:
+                                    self.menu.player_selected -=1
+                if keys[pygame.K_DOWN]:
+                    if self.menu.index == 2:
+                        if self.menu.item_menu:
+                            if self.menu.item_selected:
+                                if self.menu.player_selected < len(self.inventory.team)-1:
+                                    self.menu.player_selected += 1
+
+            screen.fill(white) 
+            self.inventory = self.menu.draw(screen,self.inventory,self.stages,self.offset)
+            pygame.display.flip()
+            clock.tick(FPS)
+
+        return -1
+
     def display_menu(self,screen):
         clock = pygame.time.Clock()
         running = True
@@ -974,7 +1023,6 @@ class Game():
                                 self.menu.selected = 0
                                 self.menu.index = 2
                                 self.menu.item_menu = True
-                                #item_menu = True
                         elif self.menu.options[self.menu.selected] == 'Armed':
                             self.menu.selected = 0
                             self.menu.index = 3
@@ -992,29 +1040,51 @@ class Game():
                         print(self.menu.item_menu)
                         if self.menu.item_menu:
                             if self.menu.item_selected:
-                                item = list(self.inventory.items.items())[self.menu.selected]
-                                """
-                                Check if it's recovery and non multi
-                                (todo)
-                                """
-                                item_id = -1
-                                for i in range(len(self.inventory.all_items)):
-                                    if self.inventory.all_items[i][0] == item[0][0]:
-                                        item_id = i
-                                        break
-                                print(self.inventory.all_items[item_id][1])
-                                print(item)
-                                if self.inventory.all_items[item_id][1] == 'Recover':
-                                    if not self.inventory.all_items[item_id][3]:
-                                        pass
-                                    else:
-                                        self.menu.player_selected = 0
+                                items = list(self.inventory.items.items())
+                                if len(items) != 0:
+                                    item = items[self.menu.selected]
+                                   
+                                    print('Item in use',item[0])
+                                    item_id = -1
+                                    for i in range(len(self.inventory.all_items)):
+                                        print(i)
+                                        if self.inventory.all_items[i][0] == item[0]:
+                                            item_id = i
+                                            break
+
+                                    is_multi = self.inventory.all_items[item_id][5]
+                                    is_alive = self.inventory.all_items[item_id][6]
+                                    targeting_players = self.inventory.all_items[item_id][7]
+                                    """
+                                    Pick player target(s) from alive or dead due to multi
+                                    """
+                                    print(is_multi,is_alive,targeting_players)
+                                    target_indexes = self.pick_item_targets(screen,is_multi,is_alive,targeting_players)
+                                    if target_indexes != -1:
+                                        for target in target_indexes:
+                                            for i, effect in enumerate(self.inventory.all_items[item_id][1]):
+                                                #3 types of recovery hp,mp,sp then amount healed
+                                                if effect == 'Recover':
+                                                    if self.inventory.all_items[item_id][2] == 'Hp':
+                                                        if self.inventory.all_items[item_id][3]:
+                                                            heal_amount = self.inventory.all_items[item_id][4][i]
+                                                        else:
+                                                            heal_amount = int((self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]]/100)*self.inventory.all_items[item_id][4][i])
+                                                        print(heal_amount)
+                                                        self.inventory.unlocked_team[target].update_field(-heal_amount,self.inventory.all_items[item_id][2],self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]])
+                                                    else:
+                                                        print('Sp or Mp recovery')
+                                                        pass
+
+                                        self.inventory.update_item(item_id,-1)
+                                        items = list(self.inventory.items.items())
+                                        if len(items) == 0:
+                                            self.menu.item_menu = False
+                                            self.menu.item_selected =  False
+                                            self.menu.selected = 1
+                                            self.menu.index = 0       
                             else:
                                 self.menu.item_selected = True
-                                
-
-                            #self.menu.item_selected = False
-                            #item_selected = False
                         
                     elif self.menu.index == 3:
                         player = self.menu.all_unlocked_team[self.menu.selected]
@@ -1498,7 +1568,7 @@ class Game():
         Target all targets you can have
         """
         for target in target_indexes:
-            enemy_npcs.sprites()[target].update_field(damage,'Hp')
+            enemy_npcs.sprites()[target].update_field(damage,'Hp',enemy_npcs.sprites()[target].stats['Hp'])
        
         #print(enemy_npcs.sprites()[enemy_index].hp)
         enemy_npcs.sprites()[enemy_index].rect.topleft = (x,y)
@@ -1514,13 +1584,17 @@ class Game():
                     return player_index
         return player_index
 
-    def pick_targets(self,screen,enemy_npcs,is_multi,targeting_players):
+    def pick_targets(self,screen,enemy_npcs,is_multi,is_alive,targeting_players):
         valid_targets = []
         if targeting_players:
             for player in self.inventory.team:
                 if player != None: 
-                    if self.inventory.unlocked_team[player].stats['Current_Hp'] > 0:
-                        valid_targets.append(player) 
+                    if is_alive:
+                        if self.inventory.unlocked_team[player].stats['Current_Hp'] > 0:
+                            valid_targets.append(player) 
+                    else:
+                        if self.inventory.unlocked_team[player].stats['Current_Hp'] <= 0:
+                            valid_targets.append(player) 
         else:
             valid_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].stats['Current_Hp'] > 0] 
 
@@ -1642,8 +1716,9 @@ class Game():
                             #print(all_valid_menu[index])
                             if options[all_valid_menu[index]] == "Attack":
                                 is_multi = False
+                                is_alive = True
                                 targeting_players = False
-                                target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players)
+                                target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,is_alive,targeting_players)
                                 #print(target_indexes)
                                 if target_indexes != -1:
                                     enemy_npcs = self.display_attacking(screen,player_index,target_indexes,enemy_npcs)
@@ -1658,7 +1733,7 @@ class Game():
                                 #Increase hp by 10% and then cap it off to max hp
                                 hp_heal = self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Hp']//10
                                 #print(hp_heal)
-                                self.inventory.unlocked_team[self.inventory.team[player_index]].update_field(-hp_heal,'Hp')
+                                self.inventory.unlocked_team[self.inventory.team[player_index]].update_field(-hp_heal,'Hp',self.inventory.unlocked_team[self.inventory.team[player_index]].stats['Hp'])
                                 self.inventory.unlocked_team[self.inventory.team[player_index]].is_defending = True
                                 player_index = self.increment_player(player_index)
                                 index = 0
@@ -1676,18 +1751,25 @@ class Game():
                                                 break
 
                                         is_multi = self.inventory.all_items[item_id][5]
+                                        is_alive = self.inventory.all_items[item_id][6]
                                         targeting_players = self.inventory.all_items[item_id][7]
-                                        target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players)
+                                        
+                                        target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,is_alive,targeting_players)
                                         if target_indexes != -1:
                                             for target in target_indexes:
-                                                if self.inventory.all_items[item_id][1] == 'Recover':
+                                                for i, effect in enumerate(self.inventory.all_items[item_id][1]):
                                                     #3 types of recovery hp,mp,sp then amount healed
-                                                    if self.inventory.all_items[item_id][3]:
-                                                        heal_amount = self.inventory.all_items[item_id][4]
-                                                    else:
-                                                        heal_amount = int((self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]]/100)*self.inventory.all_items[item_id][4])
-                                                    print(heal_amount)
-                                                    self.inventory.unlocked_team[target].update_field(-heal_amount,self.inventory.all_items[item_id][2])
+                                                    if effect == 'Recover':
+                                                        if self.inventory.all_items[item_id][2] == 'Hp':
+                                                            if self.inventory.all_items[item_id][3]:
+                                                                heal_amount = self.inventory.all_items[item_id][4][i]
+                                                            else:
+                                                                heal_amount = int((self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]]/100)*self.inventory.all_items[item_id][4][i])
+                                                            print(heal_amount)
+                                                            self.inventory.unlocked_team[target].update_field(-heal_amount,self.inventory.all_items[item_id][2],self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]])
+                                                        else:
+                                                            print('Sp or Mp recovery')
+                                                            pass
 
                                             self.inventory.update_item(item_id,-1)
                                             item_selection = False
@@ -1811,7 +1893,7 @@ class Game():
                         #print(valid_player_targets) 
                         generate_random_player_target = random.choice(valid_player_targets)
                         #print(generate_random_player_target)
-                        self.inventory.unlocked_team[generate_random_player_target].update_field(damage,'Hp')
+                        self.inventory.unlocked_team[generate_random_player_target].update_field(damage,'Hp', self.inventory.unlocked_team[generate_random_player_target].stats['Hp'])
                         
                         #all(self.inventory.unlocked_team[player_index].stats['Current_hp']<=0 for player_index in self.inventory.team)
                         players_dead = True
@@ -1862,6 +1944,16 @@ class Game():
         for i in range(len(self.stages.chest_list)):
             rect = self.stages.chest_list.sprites()[i].rect
             if rect.colliderect(self.stages.player.rect):
+                for x in self.stages.chest_list.sprites()[i].contains:
+                    if x[0] == 0:
+                        self.inventory.update_item(x[1],x[2])
+                    elif x[0] == 1:
+                        pass
+                    elif x[0] == 2:
+                        pass
+                    else:
+                        pass
+                """
                 if self.stages.chest_list.sprites()[i].type_unlocked == 0:
                     print('I hit a item chest')
                     self.inventory.update_item(self.stages.chest_list.sprites()[i].item_id,self.stages.chest_list.sprites()[i].quantity)
@@ -1869,6 +1961,8 @@ class Game():
                     print('I hit a weapon chest')
                 else:
                     print('I hit a armour chest') 
+                """
+               
                 del self.stages.chest_locations[self.stages.level][i]
             else:
                 removed_chest.add(self.stages.chest_list.sprites()[i])
