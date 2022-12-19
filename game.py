@@ -552,10 +552,11 @@ class Menu():
         img = pygame.image.load(os.path.join('.//assets//menu//background.png')).convert()
         self.bg = pygame.transform.scale(img,((screen_width,screen_height)))
         #Which page of the menu and what selected everytime I move a page just make selected 0
-        self.item_selected = False
         self.item_menu = False
+        self.item_selected = False
+        
         self.equipment_index = 0
-        self.player_selected = 0
+        self.player_selected = None
         self.all_unlocked_team = None
         self.valid_equipment = None
         self.selected = 0
@@ -908,7 +909,24 @@ class Inventory():
             for i in range(3):
                 img = self.all_spritesheets.image_at((location[0]+(i*location[1]),location[2],location[3],location[4]), colorkey=black)
                 self.attack_sprites.append(img)
-        
+
+    def item_usage(self,item_id,target_indexes):
+        for target in target_indexes:
+            for i, effect in enumerate(self.all_items[item_id][1]):
+                #3 types of recovery hp,mp,sp then amount healed
+                if effect == 'Recover':
+                    if self.all_items[item_id][2] == 'Hp':
+                        if self.all_items[item_id][3]:
+                            heal_amount = self.all_items[item_id][4][i]
+                        else:
+                            heal_amount = int((self.unlocked_team[target].stats[self.all_items[item_id][2]]/100)*self.all_items[item_id][4][i])
+                        print(heal_amount)
+                        self.unlocked_team[target].update_field(-heal_amount,self.all_items[item_id][2],self.unlocked_team[target].stats[self.all_items[item_id][2]])
+                else:
+                    print('Sp or Mp recovery')
+                    pass
+        self.update_item(item_id,-1)
+
     def update_item(self,id,quantity):
         self.items[self.all_items[id][0]] = self.items.get(self.all_items[id][0],0) + quantity
         if self.items[self.all_items[id][0]]<=0:
@@ -970,6 +988,7 @@ class Game():
         else:
             pass
 
+        self.menu.player_selected = 0
         clock = pygame.time.Clock()
         running = True
         while running:
@@ -981,6 +1000,10 @@ class Game():
                 if keys[pygame.K_RETURN]:
                     return [self.inventory.team[self.menu.player_selected]]
                 if keys[pygame.K_BACKSPACE]:
+                    if self.menu.index == 2:
+                        if self.menu.item_menu:
+                            if self.menu.item_selected:
+                                self.menu.item_selected = False
                     return -1
                 if keys[pygame.K_UP]:
                     if self.menu.index == 2:
@@ -1007,7 +1030,8 @@ class Game():
         running = True
         self.menu.equipment_index = 0
         self.menu.item_menu = False
-        self.menu.player_selected = 0
+        self.menu.player_selected = None
+
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -1039,6 +1063,7 @@ class Game():
                     elif self.menu.index == 2:
                         print(self.menu.item_menu)
                         if self.menu.item_menu:
+                            print(self.menu.item_selected)
                             if self.menu.item_selected:
                                 items = list(self.inventory.items.items())
                                 if len(items) != 0:
@@ -1055,34 +1080,24 @@ class Game():
                                     is_multi = self.inventory.all_items[item_id][5]
                                     is_alive = self.inventory.all_items[item_id][6]
                                     targeting_players = self.inventory.all_items[item_id][7]
+                                    print(is_multi,is_alive,targeting_players)
                                     """
                                     Pick player target(s) from alive or dead due to multi
                                     """
                                     print(is_multi,is_alive,targeting_players)
                                     target_indexes = self.pick_item_targets(screen,is_multi,is_alive,targeting_players)
                                     if target_indexes != -1:
-                                        for target in target_indexes:
-                                            for i, effect in enumerate(self.inventory.all_items[item_id][1]):
-                                                #3 types of recovery hp,mp,sp then amount healed
-                                                if effect == 'Recover':
-                                                    if self.inventory.all_items[item_id][2] == 'Hp':
-                                                        if self.inventory.all_items[item_id][3]:
-                                                            heal_amount = self.inventory.all_items[item_id][4][i]
-                                                        else:
-                                                            heal_amount = int((self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]]/100)*self.inventory.all_items[item_id][4][i])
-                                                        print(heal_amount)
-                                                        self.inventory.unlocked_team[target].update_field(-heal_amount,self.inventory.all_items[item_id][2],self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]])
-                                                    else:
-                                                        print('Sp or Mp recovery')
-                                                        pass
-
-                                        self.inventory.update_item(item_id,-1)
+                                        self.inventory.item_usage(item_id,target_indexes)
+                                        
+                                        self.menu.item_selected =  False
                                         items = list(self.inventory.items.items())
                                         if len(items) == 0:
                                             self.menu.item_menu = False
-                                            self.menu.item_selected =  False
                                             self.menu.selected = 1
-                                            self.menu.index = 0       
+                                            self.menu.index = 0 
+                                    else:
+                                        self.menu.item_selected =  False
+
                             else:
                                 self.menu.item_selected = True
                         
@@ -1132,12 +1147,8 @@ class Game():
                     else:
                         if self.menu.index == 2:
                             if self.menu.item_menu:
-                                if self.menu.item_selected:
-                                    if self.menu.player_selected > 0:
-                                        self.menu.player_selected -=1
-                                else:
-                                    if self.menu.selected > 0:
-                                        self.menu.selected -= 1 
+                                if self.menu.selected > 0:
+                                    self.menu.selected -= 1 
                         
                 if keys[pygame.K_DOWN]:
                     if self.menu.index == 0:
@@ -1149,20 +1160,12 @@ class Game():
                     else:
                         if self.menu.index == 2:
                             if self.menu.item_menu:
-                                if self.menu.item_selected:
-                                    if self.menu.player_selected < len(self.inventory.team)-1:
-                                        self.menu.player_selected += 1
-                                        
-                                else:
-                                    if self.menu.selected < len(self.inventory.items)-1:
-                                        self.menu.selected += 1 
+                                if self.menu.selected < len(self.inventory.items)-1:
+                                    self.menu.selected += 1 
                 if keys[pygame.K_BACKSPACE]:
                     if self.menu.index == 2:
                         if self.menu.item_menu:
-                            if self.menu.item_selected:
-                                self.menu.item_selected = False
-                                self.menu.player_selected = 0
-                            else:
+                            if not self.menu.item_selected:
                                 self.menu.item_menu = False
                                 self.menu.index = 0
                                 self.menu.selected = 1 
@@ -1756,22 +1759,9 @@ class Game():
                                         
                                         target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,is_alive,targeting_players)
                                         if target_indexes != -1:
-                                            for target in target_indexes:
-                                                for i, effect in enumerate(self.inventory.all_items[item_id][1]):
-                                                    #3 types of recovery hp,mp,sp then amount healed
-                                                    if effect == 'Recover':
-                                                        if self.inventory.all_items[item_id][2] == 'Hp':
-                                                            if self.inventory.all_items[item_id][3]:
-                                                                heal_amount = self.inventory.all_items[item_id][4][i]
-                                                            else:
-                                                                heal_amount = int((self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]]/100)*self.inventory.all_items[item_id][4][i])
-                                                            print(heal_amount)
-                                                            self.inventory.unlocked_team[target].update_field(-heal_amount,self.inventory.all_items[item_id][2],self.inventory.unlocked_team[target].stats[self.inventory.all_items[item_id][2]])
-                                                        else:
-                                                            print('Sp or Mp recovery')
-                                                            pass
 
-                                            self.inventory.update_item(item_id,-1)
+                                            self.inventory.item_usage(item_id,target_indexes)
+
                                             item_selection = False
                                             player_index = self.increment_player(player_index)
                                             index = 0  
