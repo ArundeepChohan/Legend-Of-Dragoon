@@ -12,7 +12,6 @@ from math import cos, sin, pi
 # Game Initialization
 pygame.init()
 pygame.mixer.init()
-#pygame.mixer.quit() 
 
 # Game Resolution
 screen_width            = 800
@@ -121,7 +120,6 @@ class Chest(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         #What can I unlock from chest? item, weapon, armour(0,1,2) with x amount of quantities
         self.contains = items
-
         self.all_spritesheets = Spritesheet(os.path.join('assets/sprites', 'sprites.png'))
         self.image = self.all_spritesheets.image_at((7.5+(1*15),42.5,15,20), colorkey=black)
         self.rect = self.image.get_rect()
@@ -152,7 +150,7 @@ class Npc(pygame.sprite.Sprite):
         There are 8 status ailments
         Poison, Stun, Arm-blocking, Confusion, Bewitchment, Fear, Despirit, Petrification, Can't Combat
         """
-        self.status = [-1]*8
+        self.status = [-1]*7
 
     def update(self):
         if self.state == 0:
@@ -185,7 +183,6 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.movex = 0
         self.movey = 0
-        self.frames = [0]*12
         player_movement_spritesheets = Spritesheet(os.path.join('assets/player', 'movement.png'))
         self.sprites = []
         for i in range(4):
@@ -194,6 +191,7 @@ class Player(pygame.sprite.Sprite):
         #print(self.sprites)
         self.images = player_movement_spritesheets.images_at(self.sprites, black)
         self.ani = 4
+        self.frame = 0
         self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.topleft = [x,y]
@@ -207,35 +205,42 @@ class Player(pygame.sprite.Sprite):
     """
     def update(self,boundary):
         #Rework to use frames to go through a walking animation (ToDo)
+        """
+        self.frame+=1
+        if self.frame > 3*self.ani:
+            self.frame = 0
+        """
+        
         if self.movex > 0: 
+            
             if self.movey > 0:
-                self.image = self.images[8]
+                self.image = self.images[8+self.frame//self.ani]
                 self.image = pygame.transform.rotate(self.image, -23)
                 self.image.set_colorkey(black)
             elif self.movey < 0:
-                self.image = self.images[8]
+                self.image = self.images[8+self.frame//self.ani]
                 self.image = pygame.transform.rotate(self.image, 23)
                 self.image.set_colorkey(black)
             else:
-                self.image = self.images[8]
+                self.image = self.images[8+self.frame//self.ani]
         elif self.movex < 0:
             if self.movey > 0:
-                self.image = self.images[4]
+                self.image = self.images[4+self.frame//self.ani]
                 self.image = pygame.transform.rotate(self.image, 23)
                 self.image.set_colorkey(black)
             elif self.movey < 0:
-                self.image = self.images[4]
+                self.image = self.images[4+self.frame//self.ani]
                 self.image = pygame.transform.rotate(self.image, -23)
                 self.image.set_colorkey(black)
             else:
-                self.image = self.images[4]
-        else:
+                self.image = self.images[4+self.frame//self.ani]
+        else:   
             if self.movey > 0:
-                self.image = self.images[0]
+                self.image = self.images[0+self.frame//self.ani]
             elif self.movey < 0:
-                self.image = self.images[12]
+                self.image = self.images[12+self.frame//self.ani]
             else:
-                self.image = self.images[0]
+                self.image = self.images[0+self.frame//self.ani]
 
         cage_mask_image = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
         pygame.draw.polygon(cage_mask_image, white, boundary)
@@ -252,6 +257,8 @@ class Player(pygame.sprite.Sprite):
         overlap_count = cage_mask.overlap_area(player_mask, (offset_x, offset_y))
         if overlap_count == player_mask_count:
             self.rect = new_rect
+        
+            
 
 class Cutscene():
     def __init__(self):
@@ -406,15 +413,15 @@ class Stage():
             self.npc_list.add(new_npc)
         
         self.battle_backgrounds = []
-        #Position and a list for enemies id x,y,[ids]
-        self.enemy_positions = [[[450,500,50,50,[0,1]]],
+        #Position and a list for enemies id x,y,[ids], and if not boss fight
+        self.enemy_positions = [[[450,500,50,50,[0]]],
                                 [[100,100,100,100,[0,1,0]]]
                                ]
         self.enemy_images = [[[self.npc_sprite_sheet.image_at((135+(80*i),20,65,50), colorkey=black) for i in range(7)],
                               [self.npc_sprite_sheet.image_at((135+(80*i),397,65,68), colorkey=black) for i in range(7)]],
                              [[self.npc_sprite_sheet.image_at((135+(80*i),20,65,50), colorkey=black) for i in range(7)]], 
                             ]
-        self.enemy_base_stats = [ {'Name':'Knight','Level':1,'D_index':None,'Type':None,'Hp':5,'Attack':3,'Defense':0,'Matk':0,'Mdef':0,'Minor':True},{'Name':'Commander','Level':1,'D_index':None,'Type':None,'Hp':15,'Attack':5,'Defense':0,'Matk':0,'Mdef':0,'Minor':True}]
+        self.enemy_base_stats = [ {'Name':'Knight','Level':1,'D_index':None,'Type':None,'Hp':5,'Attack':3,'Defense':0,'Matk':0,'Mdef':0,'Exp':1},{'Name':'Commander','Level':1,'D_index':None,'Type':None,'Hp':15,'Attack':5,'Defense':0,'Matk':0,'Mdef':0,'Exp':3}]
         #This is for random battles
         self.enemies_by_level = [[0],[0],[0]]
 
@@ -513,9 +520,9 @@ class Character():
         """
         There are 8 status ailments
         Poison, Stun, Arm-blocking, Confusion, Bewitchment, Fear, Despirit, Petrification, Can't Combat
+        Keep track of 7 and set hp to 0 for last.
         """
         self.status = [-1] * 7
-
         self.slots = [None] * 5
         self.is_defending = False
         self.in_dragoon = False
@@ -1068,7 +1075,6 @@ class Game():
                                 items = list(self.inventory.items.items())
                                 if len(items) != 0:
                                     item = items[self.menu.selected]
-                                   
                                     print('Item in use',item[0])
                                     item_id = -1
                                     for i in range(len(self.inventory.all_items)):
@@ -1088,7 +1094,6 @@ class Game():
                                     target_indexes = self.pick_item_targets(screen,is_multi,is_alive,targeting_players)
                                     if target_indexes != -1:
                                         self.inventory.item_usage(item_id,target_indexes)
-                                        
                                         self.menu.item_selected =  False
                                         items = list(self.inventory.items.items())
                                         if len(items) == 0:
@@ -1097,7 +1102,6 @@ class Game():
                                             self.menu.index = 0 
                                     else:
                                         self.menu.item_selected =  False
-
                             else:
                                 self.menu.item_selected = True
                         
@@ -1507,7 +1511,6 @@ class Game():
                     if keys[pygame.K_x]:
                         seconds = (pygame.time.get_ticks()-start_ticks)/1000
                         #print(seconds)
-
                         #Thresh hold for timing between hitting attacks
                         if (time_between_attacks[hits]//10)*9 <= seconds <= time_between_attacks[hits]:
                             print('Hit attack')
@@ -1728,6 +1731,11 @@ class Game():
                                     valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].stats['Current_Hp']>0]
                                     if len(valid_enemy_targets) == 0:
                                         print('Killed Targets')
+                                        # Gain experience for all people(look into all unlocked people)
+                                        total_exp = 0
+                                        for i in range(len(enemy_npcs)):
+                                            total_exp+=enemy_npcs.sprites()[i].stats['Exp']
+                                        print('Total exp',total_exp) 
                                         return
                                     else:
                                         player_index = self.increment_player(player_index)
@@ -1759,15 +1767,21 @@ class Game():
                                         
                                         target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,is_alive,targeting_players)
                                         if target_indexes != -1:
-
                                             self.inventory.item_usage(item_id,target_indexes)
-
                                             item_selection = False
                                             player_index = self.increment_player(player_index)
                                             index = 0  
                                 else:
                                     item_selection = True
                                     print('Open Items')
+                            if options[all_valid_menu[index]] == "Run":
+                                # Gain experience for all people(look into all unlocked people)
+                                total_exp = 0
+                                for i in range(len(enemy_npcs)):
+                                    total_exp+=enemy_npcs.sprites()[i].stats['Exp']
+                                    print('Total exp',total_exp) 
+                                return
+
 
                             if options[all_valid_menu[index]] == "Dragoon":
                                 self.inventory.unlocked_team[self.inventory.team[player_index]].in_dragoon = True
@@ -1776,13 +1790,19 @@ class Game():
 
                             if options[all_valid_menu[index]] == "D_Attack":
                                 is_multi = False
+                                is_alive = True
                                 targeting_players = False
-                                target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,targeting_players)
+                                target_indexes = self.pick_targets(screen,enemy_npcs,is_multi,is_alive,targeting_players)
                                 if target_indexes != -1:
                                     enemy_npcs = self.display_d_attacking(screen,player_index,target_indexes,enemy_npcs)
                                     valid_enemy_targets = [i for i in range(len(enemy_npcs)) if enemy_npcs.sprites()[i].stats['Current_Hp']>0]
                                     if len(valid_enemy_targets) == 0:
                                         print('Killed Targets')
+                                        # Gain experience for all people(look into all unlocked people)
+                                        total_exp = 0
+                                        for i in range(len(enemy_npcs)):
+                                            total_exp+=enemy_npcs.sprites()[i].stats['Exp']
+                                        print('Total exp',total_exp) 
                                         return
                                     else:
                                         player_index = self.increment_player(player_index)
@@ -1884,7 +1904,6 @@ class Game():
                         generate_random_player_target = random.choice(valid_player_targets)
                         #print(generate_random_player_target)
                         self.inventory.unlocked_team[generate_random_player_target].update_field(damage,'Hp', self.inventory.unlocked_team[generate_random_player_target].stats['Hp'])
-                        
                         #all(self.inventory.unlocked_team[player_index].stats['Current_hp']<=0 for player_index in self.inventory.team)
                         players_dead = True
                         for player in self.inventory.team:
@@ -1921,9 +1940,11 @@ class Game():
                     enemy_npcs.add(new_npc)
                 self.display_battle(screen,enemy_npcs,False)
                 """
-                Do a battle sequence if false exit game
-                When leveling skip the master one only update it when leveling moves
-                Up to len(self.inventory.all_additions[index])
+                Do a battle sequence if false exit game.
+                When leveling skip the master one only update it when leveling moves up to 
+                len(self.inventory.all_additions[index])
+                Total the enemies exp, then divide by number of characters on the team from 
+                there make sure if the exp of each character is past the total experience then update. 
                 """
                 #print(self.stages.enemy_positions[self.stages.level][i])
                 del self.stages.enemy_positions[self.stages.level][i]
@@ -2023,8 +2044,7 @@ class Game():
                     if player.stats['D_Index'] == index:
                         player.update_stats(self.inventory)
             
-            """
-            
+            """       
         else:
             pass
 

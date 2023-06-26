@@ -204,10 +204,12 @@ def start():
     size    = (150,75)
     button1 = Button(((screen_width/2)-size[1], (screen_height/2)), size, black, "New Game")
     button2 = Button(((screen_width/2)-size[1], (screen_height/2)+size[0]/2), size, black, "EXIT")
+    """     
     logo    = pygame.image.load(".//assets//LegendOfDragoonLogo.png").convert()
     logo.convert_alpha()  
     logo.set_colorkey(black)  
-    logo    = pygame.transform.scale(logo,((screen_width),300))
+    logo    = pygame.transform.scale(logo,((screen_width),300)) 
+    """
     clock   = pygame.time.Clock()
     running = True
 
@@ -228,7 +230,7 @@ def start():
                 exit()
 
         screen.fill(white)    
-        screen.blit(logo,(0,0))
+        #screen.blit(logo,(0,0))
         button1.draw(screen)
         button2.draw(screen)
         pygame.display.flip()
